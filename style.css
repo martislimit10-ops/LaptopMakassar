@@ -24,3 +24,9 @@ dialog#detail[open]::backdrop{animation:fade .22s ease-out}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
+#highlightList {
+  display: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 0 !important;
+}
