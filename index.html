@@ -28,73 +28,63 @@
   <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></g></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></g></symbol>
   <symbol id="i-laptop" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></g></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></symbol>
+  <symbol id="i-chev-l" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-chev-r" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7.5"/><path d="m21 21-4.3-4.3"/></g></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/><path d="M2.5 3h2.4l2.5 11.6a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 1.9-1.5L21 7H6"/></g></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 8h16M4 16h11"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></g></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1"/></g></symbol>
 </svg>
 
 <!-- ============ HEADER ============ -->
 <header class="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur">
-  <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-    <h1 class="text-lg font-extrabold tracking-tight">
-      <a href="#" class="flex items-center gap-2">
-        <img src="images/logo.png" alt="Logo Laptop Makassar" class="h-9 w-9 rounded-xl object-cover shadow-sm">
-        <span class="font-bold text-gray-800 text-lg">Laptop Makassar</span>
+  <div class="mx-auto grid h-16 max-w-6xl grid-cols-[minmax(5rem,1fr)_minmax(0,auto)_minmax(5rem,1fr)] items-center gap-1 px-3 sm:px-6">
+    <div class="flex items-center justify-start">
+      <button type="button" id="btnMenu" class="hdr-btn" aria-label="Buka menu" aria-expanded="false" aria-controls="sidebar">
+        <svg class="h-6 w-6"><use href="#i-menu"/></svg>
+      </button>
+    </div>
+    <h1 class="min-w-0 text-lg font-extrabold tracking-tight">
+      <a href="#" class="flex items-center justify-center gap-2" aria-label="Laptop Makassar, ke atas">
+        <img src="images/logo.png" alt="Logo Laptop Makassar" class="h-8 w-8 shrink-0 rounded-xl object-cover shadow-sm sm:h-9 sm:w-9">
+        <span class="truncate text-sm font-bold text-gray-800 min-[380px]:text-[15px] sm:text-lg">Laptop Makassar</span>
       </a>
     </h1>
-    <nav class="hidden items-center gap-7 text-sm font-medium text-gray-600 md:flex" aria-label="Navigasi utama">
-      <a href="#kategori" class="hover:text-[#800000]">Kategori</a>
-      <a href="#katalog" class="hover:text-[#800000]">Katalog</a>
-      <a href="#lokasi" class="hover:text-[#800000]">Lokasi</a>
-    </nav>
-    <a data-wa target="_blank" rel="noopener" aria-label="Chat WhatsApp"
-       class="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-3.5 py-2.5 text-sm font-bold text-[#111827] hover:brightness-95 sm:px-4">
-      <svg class="h-5 w-5"><use href="#i-wa"/></svg>
-      <span class="hidden sm:inline">Chat WhatsApp</span>
-    </a>
-    <a href="admin.html" aria-label="Menu admin" title="Login admin" rel="nofollow"
-       class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-300 text-gray-700 hover:border-[#111827] hover:text-[#111827]">
-      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-    </a>
+    <div class="flex items-center justify-end">
+      <button type="button" id="btnCari" class="hdr-btn" aria-label="Cari" data-tahap2>
+        <svg class="h-6 w-6"><use href="#i-search"/></svg>
+      </button>
+      <button type="button" id="btnStore" class="hdr-btn" aria-label="Katalog toko" data-tahap2>
+        <svg class="h-6 w-6"><use href="#i-cart"/></svg>
+      </button>
+    </div>
   </div>
 </header>
 
 <main>
 
-<!-- ============ SECTION 1: HERO VIDEO ============ -->
-<section class="pt-4 md:pt-6" aria-label="Video promosi Laptop Makassar">
-  <div class="mx-auto max-w-6xl px-4 sm:px-6">
-    <div id="videoContainer" class="relative aspect-video overflow-hidden rounded-2xl bg-black">
+<!-- ============ SECTION 1: HERO (SLIDER FOTO + VIDEO, RASIO POTRET 9:16) ============ -->
+<section id="hero" class="bg-[#0B0F14]" aria-label="Banner utama Laptop Makassar" aria-roledescription="carousel">
+  <div class="hero-frame">
+    <div id="heroTrack" class="hero-track" tabindex="0"></div>
 
-      <!-- Video Utama -->
-      <video 
-        id="promo" 
-        class="absolute inset-0 h-full w-full object-contain"
-        autoplay 
-        muted 
-        loop 
-        playsinline
-        aria-label="Video promosi Laptop Makassar"
-      >
-        <source src="video/promo.mp4" type="video/mp4">
-        Browser kamu belum mendukung pemutar video.
-      </video>
-
-      <!-- Overlay Logo Pause -->
-      <div id="pauseOverlay" class="pointer-events-none absolute inset-0 z-10 hidden items-center justify-center bg-black/20">
-        <div class="flex h-16 w-16 items-center justify-center rounded-full bg-[#fef08a]/80 text-white shadow-lg backdrop-blur-sm">
-          <svg class="h-8 w-8 fill-current"><use href="#i-pause"/></svg>
-        </div>
-      </div>
-
-      <!-- Tombol Suara -->
-      <button 
-        id="toggleMute" 
-        type="button" 
-        class="absolute bottom-4 right-8 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-[#fef08a]/80 text-white shadow-md hover:bg-[#fef08a] focus:outline-none sm:right-10"
-        aria-label="Pengaturan Suara"
-      >
-        <svg id="iconVolOff" class="h-5 w-5 fill-current"><use href="#i-vol-off"/></svg>
-        <svg id="iconVolOn" class="hidden h-5 w-5 fill-current"><use href="#i-vol-on"/></svg>
+    <!-- Kontrol video: tampil HANYA saat slide video aktif -->
+    <div id="heroCtl" class="hero-ctl hidden">
+      <button type="button" id="heroPlay" class="hero-round" aria-label="Jeda video">
+        <svg class="h-5 w-5"><use id="heroPlayIcon" href="#i-pause"/></svg>
       </button>
+      <button type="button" id="heroMute" class="hero-round" aria-label="Suara video, saat ini mati">
+        <svg class="h-5 w-5"><use id="heroMuteIcon" href="#i-vol-off"/></svg>
+      </button>
+    </div>
 
+    <!-- Navigasi slide -->
+    <div id="heroNav" class="hero-nav hidden">
+      <button type="button" id="heroPrev" class="hero-arrow" aria-label="Slide sebelumnya"><svg class="h-6 w-6"><use href="#i-chev-l"/></svg></button>
+      <div id="heroBars" class="flex items-center"></div>
+      <button type="button" id="heroNext" class="hero-arrow" aria-label="Slide berikutnya"><svg class="h-6 w-6"><use href="#i-chev-r"/></svg></button>
     </div>
   </div>
 </section>
@@ -199,6 +189,43 @@
     </div>
   </div>
 </dialog>
+
+<!-- ============ SIDEBAR MENU ============ -->
+<div id="sidebarOverlay" class="sidebar-overlay" aria-hidden="true"></div>
+<aside id="sidebar" class="sidebar" aria-label="Menu navigasi" inert>
+  <div class="flex h-16 shrink-0 items-center justify-between border-b border-gray-200 px-4">
+    <div class="flex items-center gap-2">
+      <img src="images/logo.png" alt="" class="h-8 w-8 rounded-xl object-cover shadow-sm">
+      <span class="font-bold text-gray-800">Laptop Makassar</span>
+    </div>
+    <button type="button" id="sidebarClose" class="hdr-btn" aria-label="Tutup menu"><svg class="h-5 w-5"><use href="#i-x"/></svg></button>
+  </div>
+
+  <nav class="min-h-0 flex-1 overflow-y-auto px-3 py-4" aria-label="Menu utama">
+    <p class="sb-title">Katalog</p>
+    <button type="button" class="sb-item" data-sb-all><span>Semua laptop</span><small>Lihat seluruh katalog</small></button>
+    <div id="sbKategori"></div>
+
+    <p class="sb-title mt-5">Pilihan cepat</p>
+    <button type="button" class="sb-item" data-sb-tag="promo"><span>Promo</span><small>Laptop dengan harga spesial</small></button>
+    <button type="button" class="sb-item" data-sb-tag="terlaris"><span>Terlaris</span><small>Paling banyak dicari</small></button>
+    <button type="button" class="sb-item" data-sb-tag="baru"><span>Baru masuk</span><small>Stok terbaru di toko</small></button>
+
+    <p class="sb-title mt-5">Toko</p>
+    <button type="button" class="sb-item" data-goto="#lokasi"><span>Lokasi dan jam buka</span><small>Alamat, peta, dan jam operasional</small></button>
+    <a data-maps target="_blank" rel="noopener" class="sb-item"><span>Buka di Google Maps</span><small>Petunjuk arah ke toko</small></a>
+    <a data-ig target="_blank" rel="noopener" class="sb-item"><span>Instagram</span><small data-ig-text></small></a>
+    <a data-wa target="_blank" rel="noopener" class="mt-3 flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-3 text-sm font-bold text-[#111827] hover:brightness-95">
+      <svg class="h-5 w-5"><use href="#i-wa"/></svg>Chat WhatsApp
+    </a>
+  </nav>
+
+  <div class="shrink-0 border-t border-gray-200 px-4 py-3">
+    <a href="admin.html" rel="nofollow" class="flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-[#111827]">
+      <svg class="h-4 w-4"><use href="#i-lock"/></svg>Login admin
+    </a>
+  </div>
+</aside>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>

@@ -99,47 +99,232 @@ function terapkanConfig() {
 }
 terapkanConfig();
 
-/* ---------- Kontrol Pemutar Video ---------- */
-const video = document.getElementById('promo');
-const videoContainer = document.getElementById('videoContainer');
-const pauseOverlay = document.getElementById('pauseOverlay');
-const toggleMuteBtn = document.getElementById('toggleMute');
-const iconVolOn = document.getElementById('iconVolOn');
-const iconVolOff = document.getElementById('iconVolOff');
+/* =====================================================================
+   HERO: SLIDER FOTO + VIDEO (rasio potret 9:16)
+   - Slide video: tombol jeda/putar dan suara tampil.
+   - Slide foto: tombol jeda dan suara otomatis disembunyikan.
+   ===================================================================== */
+const heroSection = $('#hero');
+const heroTrack   = $('#heroTrack');
+const heroCtl     = $('#heroCtl');
+const heroNav     = $('#heroNav');
+const heroBars    = $('#heroBars');
+const heroPlayBtn = $('#heroPlay');
+const heroMuteBtn = $('#heroMute');
+const HERO_DETIK_FOTO = 5000;
+const HERO = { slides: [], index: 0, muted: true, userPaused: false, timer: null, terlihat: true, sig: '' };
 
-if (videoContainer && video) {
-  videoContainer.addEventListener('click', (e) => {
-    if (e.target.closest('#toggleMute')) return;
-    if (video.paused) video.play(); else video.pause();
-  });
-  video.addEventListener('play', () => {
-    pauseOverlay.classList.add('hidden');
-    pauseOverlay.classList.remove('flex');
-  });
-  video.addEventListener('pause', () => {
-    pauseOverlay.classList.remove('hidden');
-    pauseOverlay.classList.add('flex');
+const videoAktif = () => {
+  const el = heroTrack.children[HERO.index];
+  return el ? el.querySelector('video') : null;
+};
+
+function heroSlideHtml(s, i) {
+  const cap = s.judul ? `<div class="hero-cap"><p>${esc(s.judul)}</p></div>` : '';
+  const label = `role="group" aria-roledescription="slide" aria-label="Slide ${i + 1}"`;
+  if (s.jenis === 'video') {
+    return `<div class="hero-slide" data-jenis="video" ${label}>
+      <video src="${esc(s.url)}" class="h-full w-full object-cover" muted playsinline preload="${i === 0 ? 'auto' : 'metadata'}" aria-label="${esc(s.judul || 'Video promosi Laptop Makassar')}"></video>${cap}</div>`;
+  }
+  return `<div class="hero-slide" data-jenis="foto" ${label}>
+      <img src="${esc(s.url)}" alt="${esc(s.judul || 'Banner Laptop Makassar')}" ${i === 0 ? '' : 'loading="lazy"'} ${FALLBACK_IMG} class="h-full w-full object-cover">${cap}</div>`;
+}
+
+function heroSinkronIkon() {
+  const v = videoAktif();
+  const jeda = !v || v.paused;
+  $('#heroPlayIcon').setAttribute('href', jeda ? '#i-play' : '#i-pause');
+  heroPlayBtn.setAttribute('aria-label', jeda ? 'Putar video' : 'Jeda video');
+  $('#heroMuteIcon').setAttribute('href', HERO.muted ? '#i-vol-off' : '#i-vol-on');
+  heroMuteBtn.setAttribute('aria-label', HERO.muted ? 'Suara video, saat ini mati. Ketuk untuk menyalakan' : 'Suara video, saat ini menyala. Ketuk untuk mematikan');
+}
+
+function heroMainkan(v) {
+  if (!v) return;
+  v.muted = HERO.muted;
+  const p = v.play();
+  if (p && p.catch) p.catch(() => {
+    // Browser menolak autoplay bersuara: kembali ke mode senyap
+    if (!v.muted) { v.muted = true; HERO.muted = true; heroSinkronIkon(); v.play().catch(() => {}); }
   });
 }
 
-if (toggleMuteBtn && video) {
-  toggleMuteBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    video.muted = !video.muted;
-    iconVolOff.classList.toggle('hidden', !video.muted);
-    iconVolOn.classList.toggle('hidden', video.muted);
-  });
+function heroJadwalOtomatis() {
+  clearTimeout(HERO.timer);
+  if (HERO.slides.length < 2 || kurangGerak() || !HERO.terlihat) return;
+  const s = HERO.slides[HERO.index];
+  if (s && s.jenis === 'foto') HERO.timer = setTimeout(() => heroGeser(1), HERO_DETIK_FOTO);
 }
 
-function setVideo(url) {
-  if (!video || !url) return;
-  const sekarang = video.currentSrc || video.getAttribute('src') || '';
-  if (sekarang === url) return;
-  video.innerHTML = '';
-  video.src = url;
-  video.load();
-  video.play().catch(() => {});
+function heroUpdateBars() {
+  $$('.hero-bar', heroBars).forEach((b, i) => b.setAttribute('aria-current', String(i === HERO.index)));
 }
+
+function heroAktifkan(idx) {
+  HERO.index = idx;
+  HERO.userPaused = false;
+  $$('.hero-slide', heroTrack).forEach((el, i) => {
+    const v = el.querySelector('video');
+    if (!v) return;
+    if (i === idx) { if (HERO.terlihat) heroMainkan(v); }
+    else { v.pause(); try { v.currentTime = 0; } catch (e) { /* abaikan */ } }
+  });
+  const s = HERO.slides[idx];
+  heroCtl.classList.toggle('hidden', !(s && s.jenis === 'video')); // slide foto: kontrol hilang
+  heroUpdateBars();
+  heroSinkronIkon();
+  heroJadwalOtomatis();
+}
+
+function heroKe(i, halus = true) {
+  const n = HERO.slides.length;
+  if (!n) return;
+  const idx = (i + n) % n;
+  const dekat = Math.abs(idx - HERO.index) <= 1;
+  heroTrack.scrollTo({ left: idx * heroTrack.clientWidth, behavior: halus && dekat && !kurangGerak() ? 'smooth' : 'auto' });
+}
+const heroGeser = d => heroKe(HERO.index + d);
+
+function heroToggleMain() {
+  const v = videoAktif();
+  if (!v) return;
+  if (v.paused) { HERO.userPaused = false; heroMainkan(v); }
+  else { HERO.userPaused = true; v.pause(); }
+}
+
+function heroRender(slides) {
+  const sig = JSON.stringify(slides.map(s => [s.jenis, s.url, s.judul]));
+  if (sig === HERO.sig) return; // tidak ada perubahan: jangan ulang video
+  HERO.sig = sig;
+  HERO.slides = slides;
+  HERO.index = 0;
+  heroSection.classList.toggle('hidden', !slides.length);
+  heroTrack.innerHTML = slides.map(heroSlideHtml).join('');
+  heroTrack.scrollTo({ left: 0, behavior: 'auto' });
+  heroBars.innerHTML = slides.map((_, i) =>
+    `<button type="button" class="hero-bar" data-i="${i}" aria-label="Ke slide ${i + 1}" aria-current="false"></button>`).join('');
+  heroNav.classList.toggle('hidden', slides.length < 2);
+  $$('video', heroTrack).forEach(v => {
+    v.loop = slides.length < 2;
+    v.addEventListener('play', heroSinkronIkon);
+    v.addEventListener('pause', heroSinkronIkon);
+    v.addEventListener('ended', () => { if (HERO.slides.length > 1) heroGeser(1); });
+  });
+  heroAktifkan(0);
+}
+
+async function muatHero() {
+  let slides = [];
+  try {
+    const { data, error } = await sb.from('banner').select('*').eq('aktif', true)
+      .order('urutan', { ascending: true }).order('created_at', { ascending: false });
+    if (error) throw error;
+    slides = (data || []).filter(b => b && b.url && (b.jenis === 'foto' || b.jenis === 'video'));
+  } catch (e) {
+    console.warn('Tabel banner belum siap, memakai video bawaan:', e);
+  }
+  if (!slides.length) {
+    let url = 'video/promo.mp4';
+    try {
+      const { data } = await sb.from('video').select('url_video').order('created_at', { ascending: false }).limit(1);
+      if (data && data[0] && data[0].url_video) url = data[0].url_video;
+    } catch (e) { /* pakai video bawaan */ }
+    slides = [{ jenis: 'video', url, judul: '' }];
+  }
+  heroRender(slides);
+}
+
+let heroRaf = 0;
+heroTrack.addEventListener('scroll', () => {
+  cancelAnimationFrame(heroRaf);
+  heroRaf = requestAnimationFrame(() => {
+    const w = heroTrack.clientWidth || 1;
+    const idx = Math.round(heroTrack.scrollLeft / w);
+    if (idx !== HERO.index && idx >= 0 && idx < HERO.slides.length) heroAktifkan(idx);
+  });
+}, { passive: true });
+
+heroTrack.addEventListener('pointerdown', () => clearTimeout(HERO.timer));
+['pointerup', 'pointercancel'].forEach(ev => heroTrack.addEventListener(ev, heroJadwalOtomatis));
+heroTrack.addEventListener('click', e => { if (!e.target.closest('button')) heroToggleMain(); });
+heroTrack.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft')  { e.preventDefault(); heroGeser(-1); }
+  if (e.key === 'ArrowRight') { e.preventDefault(); heroGeser(1); }
+});
+$('#heroPrev').addEventListener('click', () => heroGeser(-1));
+$('#heroNext').addEventListener('click', () => heroGeser(1));
+heroBars.addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) heroKe(Number(b.dataset.i)); });
+heroPlayBtn.addEventListener('click', heroToggleMain);
+heroMuteBtn.addEventListener('click', () => {
+  HERO.muted = !HERO.muted;
+  const v = videoAktif();
+  if (v) v.muted = HERO.muted;
+  heroSinkronIkon();
+});
+window.addEventListener('resize', () => {
+  heroTrack.scrollTo({ left: HERO.index * heroTrack.clientWidth, behavior: 'auto' });
+});
+
+/* Jeda video + timer saat hero tidak terlihat (hemat baterai dan data) */
+function heroAturTerlihat(terlihat) {
+  HERO.terlihat = terlihat;
+  const v = videoAktif();
+  if (!terlihat) { clearTimeout(HERO.timer); if (v) v.pause(); }
+  else { if (v && !HERO.userPaused) heroMainkan(v); heroJadwalOtomatis(); }
+}
+if ('IntersectionObserver' in window) {
+  new IntersectionObserver(([e]) => heroAturTerlihat(e.isIntersecting), { threshold: 0.35 }).observe(heroSection);
+}
+document.addEventListener('visibilitychange', () => heroAturTerlihat(document.visibilityState === 'visible'));
+
+/* =====================================================================
+   SIDEBAR MENU
+   ===================================================================== */
+const sidebar = $('#sidebar');
+const sbOverlay = $('#sidebarOverlay');
+const btnMenu = $('#btnMenu');
+
+$('#sbKategori').innerHTML = KATEGORI.map(k =>
+  `<button type="button" class="sb-item" data-sb-cat="${k.id}"><span>${k.label}</span><small>${k.desc}</small></button>`).join('');
+
+function bukaSidebar() {
+  sidebar.removeAttribute('inert');
+  sidebar.classList.add('open');
+  sbOverlay.classList.add('open');
+  btnMenu.setAttribute('aria-expanded', 'true');
+  document.documentElement.style.overflow = 'hidden';
+  setTimeout(() => $('#sidebarClose').focus(), 60);
+}
+function tutupSidebar(fokus = true) {
+  sidebar.classList.remove('open');
+  sbOverlay.classList.remove('open');
+  sidebar.setAttribute('inert', '');
+  btnMenu.setAttribute('aria-expanded', 'false');
+  document.documentElement.style.overflow = '';
+  if (fokus) btnMenu.focus();
+}
+const gulirKe = sel => { const el = $(sel); if (el) el.scrollIntoView({ behavior: kurangGerak() ? 'auto' : 'smooth', block: 'start' }); };
+
+btnMenu.addEventListener('click', bukaSidebar);
+$('#sidebarClose').addEventListener('click', () => tutupSidebar());
+sbOverlay.addEventListener('click', () => tutupSidebar());
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && sidebar.classList.contains('open')) tutupSidebar(); });
+
+sidebar.addEventListener('click', e => {
+  const cat = e.target.closest('[data-sb-cat]');
+  const tag = e.target.closest('[data-sb-tag]');
+  const all = e.target.closest('[data-sb-all]');
+  const go  = e.target.closest('[data-goto]');
+  if (cat)      { tutupSidebar(false); setFilter('kategori', cat.dataset.sbCat, { toggle: false }); }
+  else if (tag) { tutupSidebar(false); setFilter('tag', tag.dataset.sbTag, { toggle: false }); }
+  else if (all) { tutupSidebar(false); setFilter('all', null, { toggle: false }); }
+  else if (go)  { tutupSidebar(false); gulirKe(go.dataset.goto); }
+  else if (e.target.closest('a[target="_blank"]')) { tutupSidebar(false); }
+});
+
+/* Ikon cari dan Store di header: fungsi lengkapnya dibuat di Tahap 2.
+   Untuk sementara keduanya mengarah ke katalog. */
+$$('[data-tahap2]').forEach(b => b.addEventListener('click', () => gulirKe('#katalog')));
 
 /* ---------- Filter Katalog ---------- */
 const state = { mode: 'all', key: null, limit: PAGE };
@@ -151,11 +336,11 @@ function daftarTerfilter() {
 }
 function labelFilter() {
   if (state.mode === 'kategori') return KATEGORI.find(k => k.id === state.key)?.label ?? '';
-  if (state.mode === 'tag')      return HIGHLIGHT.find(h => h.tag === state.key)?.judul ?? '';
+  if (state.mode === 'tag')      return HIGHLIGHT.find(h => h.tag === state.key)?.judul ?? LABEL_TAG[state.key] ?? '';
   return '';
 }
-function setFilter(mode, key, { gulir = true } = {}) {
-  if (mode === state.mode && key === state.key) { mode = 'all'; key = null; }
+function setFilter(mode, key, { gulir = true, toggle = true } = {}) {
+  if (toggle && mode === state.mode && key === state.key) { mode = 'all'; key = null; }
   state.mode = mode; state.key = key; state.limit = PAGE;
   render();
   if (gulir) $('#katalog').scrollIntoView({ behavior: kurangGerak() ? 'auto' : 'smooth', block: 'start' });
@@ -405,18 +590,12 @@ async function muatConfig() {
   terapkanConfig();
 }
 
-async function muatVideo() {
-  const { data, error } = await sb.from('video').select('url_video').order('created_at', { ascending: false }).limit(1);
-  if (error) throw error;
-  if (data && data[0] && data[0].url_video) setVideo(data[0].url_video);
-}
-
 let terakhirMuat = 0;
 async function muatSemua() {
   sedangMemuat = !PRODUK.length;
   gagalMemuat = false;
   render();
-  const hasil = await Promise.allSettled([muatProduk(), muatConfig(), muatVideo()]);
+  const hasil = await Promise.allSettled([muatProduk(), muatConfig(), muatHero()]);
   hasil.forEach(h => { if (h.status === 'rejected') console.error('Gagal memuat dari Supabase:', h.reason); });
   gagalMemuat = hasil[0].status === 'rejected';
   sedangMemuat = false;
