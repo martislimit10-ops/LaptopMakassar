@@ -76,7 +76,6 @@ const waLink = teks => `https://wa.me/${CONFIG.wa}?text=${encodeURIComponent(tek
 const namaLengkap = p => `${p.merek} ${p.seri}`;
 const kurangGerak = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const PAGE = 6;
 const FALLBACK_IMG = `onerror="this.onerror=null;this.src=window.FOTO_KOSONG"`;
 
 const tahunEl = document.getElementById('tahun');
@@ -284,8 +283,6 @@ const sidebar = $('#sidebar');
 const sbOverlay = $('#sidebarOverlay');
 const btnMenu = $('#btnMenu');
 
-$('#sbKategori').innerHTML = KATEGORI.map(k =>
-  `<button type="button" class="sb-item" data-sb-cat="${k.id}"><span>${k.label}</span><small>${k.desc}</small></button>`).join('');
 
 function bukaSidebar() {
   sidebar.removeAttribute('inert');
@@ -311,96 +308,110 @@ sbOverlay.addEventListener('click', () => tutupSidebar());
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && sidebar.classList.contains('open')) tutupSidebar(); });
 
 sidebar.addEventListener('click', e => {
-  const cat = e.target.closest('[data-sb-cat]');
-  const tag = e.target.closest('[data-sb-tag]');
-  const all = e.target.closest('[data-sb-all]');
-  const go  = e.target.closest('[data-goto]');
-  if (cat)      { tutupSidebar(false); setFilter('kategori', cat.dataset.sbCat, { toggle: false }); }
-  else if (tag) { tutupSidebar(false); setFilter('tag', tag.dataset.sbTag, { toggle: false }); }
-  else if (all) { tutupSidebar(false); setFilter('all', null, { toggle: false }); }
-  else if (go)  { tutupSidebar(false); gulirKe(go.dataset.goto); }
+  const go = e.target.closest('[data-goto]');
+  if (go) { tutupSidebar(false); gulirKe(go.dataset.goto); }
   else if (e.target.closest('a[target="_blank"]')) { tutupSidebar(false); }
 });
 
-/* Ikon cari dan Store di header: fungsi lengkapnya dibuat di Tahap 2.
-   Untuk sementara keduanya mengarah ke katalog. */
-$$('[data-tahap2]').forEach(b => b.addEventListener('click', () => gulirKe('#katalog')));
+/* =====================================================================
+   HALAMAN TOKO (katalog) - dibuka dari ikon keranjang, alamat #toko
+   ===================================================================== */
+const storePage  = $('#storePage');
+const storeSelect = $('#storeKategori');
+const storeCari  = $('#storeCari');
+let tokoDariDalam = false;
+
+function sinkronToko() {
+  const buka = location.hash === '#toko';
+  const berubah = storePage.hidden === buka;
+  storePage.hidden = !buka;
+  ['header', 'main', 'footer'].forEach(t => { const el = $(t); if (el) el.inert = buka; });
+  if (!berubah) return;
+  if (buka) { storePage.scrollTop = 0; heroAturTerlihat(false); }
+  else { heroAturTerlihat(true); }
+}
+function bukaToko(fokusCari = false) {
+  tokoDariDalam = true;
+  if (location.hash !== '#toko') location.hash = '#toko'; else sinkronToko();
+  if (fokusCari) setTimeout(() => storeCari.focus(), 60);
+}
+function tutupToko() {
+  if (tokoDariDalam) { tokoDariDalam = false; history.back(); }
+  else { history.replaceState(null, '', location.pathname + location.search); sinkronToko(); }
+}
+window.addEventListener('hashchange', sinkronToko);
+$('#btnStore').addEventListener('click', () => bukaToko());
+$('#btnCari').addEventListener('click', () => bukaToko(true));
+$('#storeBack').addEventListener('click', tutupToko);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !storePage.hidden && !modal.open && !sidebar.classList.contains('open')) tutupToko();
+});
 
 /* ---------- Filter Katalog ---------- */
-const state = { mode: 'all', key: null, limit: PAGE };
+const PAGE = 8;
+const state = { mode: 'all', key: null, q: '', semua: false };
+
+storeSelect.innerHTML =
+  '<option value="all">Semua laptop</option>' +
+  '<optgroup label="Kategori">' + KATEGORI.map(k => `<option value="kategori:${k.id}">${esc(k.label)}</option>`).join('') + '</optgroup>' +
+  '<optgroup label="Label">' + Object.entries(LABEL_TAG).map(([id, t]) => `<option value="tag:${id}">${esc(t)}</option>`).join('') + '</optgroup>';
 
 function daftarTerfilter() {
-  if (state.mode === 'kategori') return PRODUK.filter(p => p.kategori === state.key);
-  if (state.mode === 'tag')      return PRODUK.filter(p => p.tags.includes(state.key));
-  return PRODUK;
+  let l = PRODUK;
+  if (state.mode === 'kategori') l = l.filter(p => p.kategori === state.key);
+  else if (state.mode === 'tag') l = l.filter(p => p.tags.includes(state.key));
+  if (state.q) {
+    const q = state.q.toLowerCase();
+    l = l.filter(p => [namaLengkap(p), p.kategori, ...Object.values(p.spek || {})].join(' ').toLowerCase().includes(q));
+  }
+  return l;
 }
-function labelFilter() {
-  if (state.mode === 'kategori') return KATEGORI.find(k => k.id === state.key)?.label ?? '';
-  if (state.mode === 'tag')      return HIGHLIGHT.find(h => h.tag === state.key)?.judul ?? LABEL_TAG[state.key] ?? '';
-  return '';
-}
-function setFilter(mode, key, { gulir = true, toggle = true } = {}) {
-  if (toggle && mode === state.mode && key === state.key) { mode = 'all'; key = null; }
-  state.mode = mode; state.key = key; state.limit = PAGE;
+
+storeSelect.addEventListener('change', () => {
+  const v = storeSelect.value;
+  if (v === 'all') { state.mode = 'all'; state.key = null; }
+  else { const [m, k] = v.split(':'); state.mode = m; state.key = k; }
+  state.semua = false;
   render();
-  if (gulir) $('#katalog').scrollIntoView({ behavior: kurangGerak() ? 'auto' : 'smooth', block: 'start' });
-}
-
-/* ---------- Render Kategori & Highlight ---------- */
-$('#kategoriList').innerHTML = KATEGORI.map(k => `
-  <button type="button" class="pick w-36 shrink-0 snap-start text-left sm:w-auto" data-cat="${k.id}" aria-pressed="false">
-    <span class="pick-img block aspect-square overflow-hidden rounded-2xl border border-gray-200 bg-[#F9FAFB]">
-      <img src="${k.foto}" alt="" loading="lazy" ${FALLBACK_IMG} class="h-full w-full object-cover">
-    </span>
-    <span class="pick-label mt-3 block text-sm font-bold">${k.label}</span>
-    <span class="mt-0.5 block text-xs leading-snug text-gray-500 line-clamp-2">${k.desc}</span>
-  </button>`).join('');
-
-$('#highlightList').innerHTML = HIGHLIGHT.map(h => {
-  const n = PRODUK.filter(p => p.tags.includes(h.tag)).length;
-  return `
-  <button type="button" class="pick w-[78%] shrink-0 snap-start text-left md:w-auto" data-tag="${h.tag}" aria-pressed="false">
-    <span class="pick-img block aspect-[16/10] overflow-hidden rounded-2xl border border-gray-200 bg-white">
-      <img src="${h.foto}" alt="" loading="lazy" ${FALLBACK_IMG} class="h-full w-full object-cover">
-    </span>
-    <span class="mt-3 flex items-baseline justify-between gap-3">
-      <span class="pick-label text-base font-bold">${h.judul}</span>
-      <span class="text-sm text-gray-600">${n} unit</span>
-    </span>
-    <span class="mt-0.5 block text-sm text-gray-600">${h.teks}</span>
-  </button>`;
-}).join('');
-
-$('#kategoriList').addEventListener('click', e => {
-  const b = e.target.closest('[data-cat]'); if (b) setFilter('kategori', b.dataset.cat);
 });
-$('#highlightList').addEventListener('click', e => {
-  const b = e.target.closest('[data-tag]'); if (b) setFilter('tag', b.dataset.tag);
-});
+storeCari.addEventListener('input', () => { state.q = storeCari.value.trim(); state.semua = false; render(); });
 
 /* ---------- Render Katalog ---------- */
 function kartuProduk(p) {
   const sp = p.spek || {};
+  const nama = namaLengkap(p);
   const lencana = p.tags.filter(t => LABEL_TAG[t]).map(t => {
     const gelap = t === 'promo';
     return `<span class="rounded-full px-2.5 py-1 text-xs font-bold ${gelap ? 'bg-[#111827] text-white' : 'bg-white text-[#111827] ring-1 ring-gray-200'}">${LABEL_TAG[t]}</span>`;
   }).join('');
   const ringkas = [sp.processor, sp.ram && `RAM ${sp.ram}`, sp.storage].filter(Boolean).map(esc).join(', ');
+  const hemat = p.hargaNormal && p.hargaNormal > p.harga ? p.hargaNormal - p.harga : 0;
+  const rincian = [['Processor', sp.processor], ['RAM', sp.ram], ['Storage', sp.storage], ['VGA', sp.vga], ['Layar', sp.layar], ['Kondisi', KONDISI[p.kondisi].label]]
+    .filter(r => r[1]).map(([k, v]) => `<div class="flex justify-between gap-3 py-1.5"><dt class="text-gray-500">${k}</dt><dd class="text-right font-semibold">${esc(v)}</dd></div>`).join('');
+  const linkBeli = waLink(`halo kak, saya mau beli ${nama} (${rupiah(p.harga)}). Masih ada?`);
   return `
-  <article class="flex flex-col rounded-2xl border border-gray-200 bg-white p-2.5 hover:border-gray-400 sm:p-3 relative">
+  <article class="flex flex-col rounded-2xl border border-gray-200 bg-white p-2.5 hover:border-gray-400 sm:p-3">
     <div class="relative aspect-[4/3] overflow-hidden rounded-xl bg-[#F9FAFB]">
-      <img src="${esc(p.foto)}" alt="${esc(namaLengkap(p))}" loading="lazy" ${FALLBACK_IMG} class="h-full w-full object-cover">
+      <img src="${esc(p.foto)}" alt="${esc(nama)}" loading="lazy" ${FALLBACK_IMG} class="h-full w-full object-cover">
       ${lencana ? `<div class="absolute left-2 top-2 flex flex-wrap gap-1.5">${lencana}</div>` : ''}
     </div>
     <div class="flex flex-1 flex-col px-1.5 pb-1.5 pt-3">
-      <h3 class="text-sm font-bold leading-snug line-clamp-2 sm:text-base">${esc(namaLengkap(p))}</h3>
+      <h3 class="text-sm font-bold leading-snug line-clamp-2 sm:text-base">${esc(nama)}</h3>
       <p class="mt-1 text-xs leading-snug text-gray-500 line-clamp-2">${ringkas}</p>
-      <div class="mt-auto pt-3">
+      <details class="spec-box mt-1 text-xs">
+        <summary>Spesifikasi lengkap<svg class="h-4 w-4"><use href="#i-chev-r"/></svg></summary>
+        <dl class="divide-y divide-gray-100 border-t border-gray-100">${rincian || '<p class="py-1.5 text-gray-500">Belum ada rincian.</p>'}</dl>
+      </details>
+      <div class="mt-auto pt-2">
         <p class="flex flex-wrap items-baseline gap-x-2 text-base font-extrabold sm:text-lg">
           ${rupiah(p.harga)}
-          ${p.hargaNormal ? `<span class="text-xs font-medium text-gray-500 line-through">${rupiah(p.hargaNormal)}</span>` : ''}
+          ${hemat ? `<span class="text-xs font-medium text-gray-500 line-through">${rupiah(p.hargaNormal)}</span>` : ''}
         </p>
-        <button type="button" data-open="${esc(p.id)}" class="mt-3 w-full rounded-xl bg-[#1F2937] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#111827]">Selengkapnya</button>
+        ${hemat ? `<p class="mt-0.5 text-xs font-semibold text-green-700">Hemat ${rupiah(hemat)}</p>` : ''}
+        <div class="mt-3 grid grid-cols-2 gap-2">
+          <a href="${linkBeli}" target="_blank" rel="noopener" class="grid place-items-center rounded-xl bg-[#25D366] px-3 py-2.5 text-sm font-bold text-[#111827] hover:brightness-95">Beli</a>
+          <button type="button" data-open="${esc(p.id)}" class="rounded-xl border border-[#1F2937] px-3 py-2.5 text-sm font-semibold text-[#1F2937] hover:bg-[#1F2937] hover:text-white">Pelajari</button>
+        </div>
       </div>
     </div>
   </article>`;
@@ -411,7 +422,7 @@ let gagalMemuat = false;
 
 function render() {
   const semua = daftarTerfilter();
-  const tampil = semua.slice(0, state.limit);
+  const tampil = state.semua ? semua : semua.slice(0, PAGE);
 
   $('#status').textContent = sedangMemuat
     ? 'Memuat katalog...'
@@ -419,15 +430,7 @@ function render() {
       ? 'Katalog belum bisa dimuat.'
       : semua.length
         ? `Menampilkan ${tampil.length} dari ${semua.length} laptop`
-        : 'Belum ada laptop di kategori ini';
-
-  const chip = (aktif, teks, aksi, extra = '') =>
-    `<button type="button" data-chip="${aksi}" ${extra} aria-pressed="${aktif}" class="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold ${aktif ? 'border-[#111827] bg-[#111827] text-white' : 'border-gray-300 bg-white text-[#111827] hover:border-[#111827]'}">${teks}</button>`;
-  $('#filterChips').innerHTML =
-    chip(state.mode === 'all', 'Semua produk', 'all') +
-    (state.mode !== 'all'
-      ? chip(true, `${labelFilter()} <svg class="h-4 w-4"><use href="#i-x"/></svg>`, 'clear', `aria-label="Hapus filter ${labelFilter()}"`)
-      : '');
+        : 'Belum ada laptop yang cocok';
 
   if (sedangMemuat) {
     $('#grid').innerHTML = Array.from({ length: PAGE }, () => `
@@ -439,7 +442,7 @@ function render() {
       </div>`).join('');
     $('#more').innerHTML = '';
   } else if (gagalMemuat && !PRODUK.length) {
-    $('#grid').innerHTML = `<div class="col-span-full rounded-2xl border border-dashed border-gray-300 p-10 text-center">
+    $('#grid').innerHTML = `<div class="col-span-full rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
         <p class="font-bold">Data laptop belum bisa dimuat.</p>
         <p class="mt-1 text-sm text-gray-600">Periksa koneksi internet, lalu coba lagi.</p>
         <button type="button" id="ulangMuat" class="mt-4 rounded-xl bg-[#1F2937] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#111827]">Muat ulang</button>
@@ -448,32 +451,24 @@ function render() {
   } else {
     $('#grid').innerHTML = tampil.length
       ? tampil.map(kartuProduk).join('')
-      : `<div class="col-span-full rounded-2xl border border-dashed border-gray-300 p-10 text-center">
+      : `<div class="col-span-full rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
            <p class="font-bold">Belum ada unit untuk pilihan ini.</p>
            <p class="mt-1 text-sm text-gray-600">Stok kami bergerak cepat. Tanyakan langsung ketersediaannya lewat WhatsApp.</p>
            <a href="${waLink(CONFIG.pesanUmum)}" target="_blank" rel="noopener" class="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-4 py-2.5 text-sm font-bold text-[#111827] hover:brightness-95"><svg class="h-5 w-5"><use href="#i-wa"/></svg>Tanya via WhatsApp</a>
          </div>`;
-    const sisa = semua.length - tampil.length;
-    $('#more').innerHTML = sisa > 0
-      ? `<button type="button" id="moreBtn" class="rounded-xl border border-[#111827] px-6 py-3 text-sm font-semibold hover:bg-[#800000] hover:text-white">Lainnya</button>`
+    /* Satu tombol "Lainnya" saja: dibuat ulang tiap render, tidak pernah dobel */
+    $('#more').innerHTML = (!state.semua && semua.length > PAGE)
+      ? `<button type="button" id="moreBtn" class="rounded-xl border border-[#111827] bg-white px-6 py-3 text-sm font-semibold hover:bg-[#111827] hover:text-white">Lainnya</button>`
       : '';
   }
-
-  $$('[data-cat]').forEach(b => b.setAttribute('aria-pressed', String(state.mode === 'kategori' && state.key === b.dataset.cat)));
-  $$('[data-tag]').forEach(b => b.setAttribute('aria-pressed', String(state.mode === 'tag' && state.key === b.dataset.tag)));
 }
 
-$('#filterChips').addEventListener('click', e => {
-  const c = e.target.closest('[data-chip]'); if (!c) return;
-  state.mode = 'all'; state.key = null; state.limit = PAGE; render();
-});
 $('#more').addEventListener('click', e => {
   if (!e.target.closest('#moreBtn')) return;
-  const sebelum = state.limit;
-  state.limit += PAGE;
+  state.semua = true;
   render();
-  const kartuBaru = $('#grid').children[sebelum];
-  if (kartuBaru) kartuBaru.querySelector('button').focus();
+  const kartuBaru = $('#grid').children[PAGE];
+  if (kartuBaru) kartuBaru.querySelector('a, button').focus();
 });
 $('#grid').addEventListener('click', e => {
   if (e.target.closest('#ulangMuat')) { muatSemua(); return; }
@@ -569,9 +564,11 @@ function dariDb(r) {
 }
 
 async function muatProduk() {
-  const { data, error } = await sb.from('produk').select('*').order('id', { ascending: true });
-  if (error) throw error;
-  PRODUK = (data || []).map(dariDb);
+  // Produk terbaru di depan. Jika kolom created_at belum ada, pakai id terbesar.
+  let r = await sb.from('produk').select('*').order('created_at', { ascending: false });
+  if (r.error) r = await sb.from('produk').select('*').order('id', { ascending: false });
+  if (r.error) throw r.error;
+  PRODUK = (r.data || []).map(dariDb);
 }
 
 async function muatConfig() {
@@ -607,6 +604,7 @@ async function muatSemua() {
 /* Muat ulang otomatis saat tab/aplikasi dibuka kembali (data selalu terbaru) */
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && Date.now() - terakhirMuat > 20000) muatSemua();
+sinkronToko();
 });
 
 /* Realtime: perubahan dari panel admin langsung muncul tanpa refresh */
@@ -622,3 +620,4 @@ try {
 
 /* ---------- Mulai ---------- */
 muatSemua();
+sinkronToko();

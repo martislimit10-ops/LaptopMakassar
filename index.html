@@ -40,7 +40,7 @@
 
 <!-- ============ HEADER ============ -->
 <header class="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur">
-  <div class="mx-auto grid h-16 max-w-6xl grid-cols-[minmax(5rem,1fr)_minmax(0,auto)_minmax(5rem,1fr)] items-center gap-1 px-3 sm:px-6">
+  <div class="mx-auto grid h-16 max-w-7xl grid-cols-[minmax(5rem,1fr)_minmax(0,auto)_minmax(5rem,1fr)] items-center gap-1 px-3 sm:px-6">
     <div class="flex items-center justify-start">
       <button type="button" id="btnMenu" class="hdr-btn" aria-label="Buka menu" aria-expanded="false" aria-controls="sidebar">
         <svg class="h-6 w-6"><use href="#i-menu"/></svg>
@@ -53,10 +53,10 @@
       </a>
     </h1>
     <div class="flex items-center justify-end">
-      <button type="button" id="btnCari" class="hdr-btn" aria-label="Cari" data-tahap2>
+      <button type="button" id="btnCari" class="hdr-btn" aria-label="Cari laptop">
         <svg class="h-6 w-6"><use href="#i-search"/></svg>
       </button>
-      <button type="button" id="btnStore" class="hdr-btn" aria-label="Katalog toko" data-tahap2>
+      <button type="button" id="btnStore" class="hdr-btn" aria-label="Buka toko dan katalog laptop">
         <svg class="h-6 w-6"><use href="#i-cart"/></svg>
       </button>
     </div>
@@ -65,7 +65,7 @@
 
 <main>
 
-<!-- ============ SECTION 1: HERO (SLIDER FOTO + VIDEO, RASIO POTRET 9:16) ============ -->
+<!-- ============ SECTION 1: HERO (SLIDER FOTO + VIDEO; HP potret 9:16, laptop layar penuh) ============ -->
 <section id="hero" class="bg-[#0B0F14]" aria-label="Banner utama Laptop Makassar" aria-roledescription="carousel">
   <div class="hero-frame">
     <div id="heroTrack" class="hero-track" tabindex="0"></div>
@@ -89,42 +89,11 @@
   </div>
 </section>
 
-<!-- ============ SECTION 2: KATEGORI ============ -->
-<section id="kategori" class="scroll-mt-20 bg-white py-12 md:py-16" aria-labelledby="judulKategori">
-  <div class="mx-auto max-w-6xl px-4 sm:px-6">
-    <h2 id="judulKategori" class="text-2xl font-extrabold tracking-tight md:text-3xl">Cari laptop berdasarkan merek</h2>
-    <p class="mt-2 text-gray-600">Pilih satu kategori untuk menyaring katalog di bawah.</p>
-    <div id="kategoriList" class="scroller -mx-4 mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-6"></div>
-  </div>
-</section>
-
-<!-- ============ SECTION 3: HIGHLIGHT ============ -->
-<section class="bg-[#F9FAFB] py-12 md:py-16" aria-labelledby="judulHighlight">
-  <div class="mx-auto max-w-6xl px-4 sm:px-6">
-    <div id="highlightList" class="scroller -mx-4 mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3 md:mx-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:px-0 md:pb-0"></div>
-  </div>
-</section>
-
-<!-- ============ SECTION 4: KATALOG ============ -->
-<section id="katalog" class="scroll-mt-20 bg-white py-12 md:py-16" aria-labelledby="judulKatalog">
-  <div class="mx-auto max-w-6xl px-4 sm:px-6">
-    <div class="flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <h2 id="judulKatalog" class="text-2xl font-extrabold tracking-tight md:text-3xl">Katalog laptop</h2>
-        <p id="status" class="mt-2 text-sm text-gray-600" aria-live="polite"></p>
-      </div>
-      <div id="filterChips" class="flex flex-wrap gap-2"></div>
-    </div>
-    <div id="grid" class="mt-8 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:gap-6"></div>
-    <div id="more" class="mt-10 text-center"></div>
-  </div>
-</section>
-
 </main>
 
 <!-- ============ SECTION 6: FOOTER & LOKASI ============ -->
 <footer id="lokasi" class="scroll-mt-20 border-t border-gray-200 bg-[#F9FAFB] pt-12 md:pt-16">
-  <div class="mx-auto max-w-6xl px-4 sm:px-6">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6">
     <h2 class="text-2xl font-extrabold tracking-tight md:text-3xl">Kunjungi toko kami</h2>
     <div class="mt-8 grid gap-6 lg:grid-cols-2 lg:gap-8">
       <div class="space-y-6">
@@ -171,6 +140,33 @@
   </div>
 </footer>
 
+<!-- ============ HALAMAN TOKO (dibuka dari ikon keranjang) ============ -->
+<div id="storePage" class="store" role="region" aria-label="Toko dan katalog laptop" hidden>
+  <div class="sticky top-0 z-10 border-b border-gray-200 bg-white">
+    <div class="mx-auto max-w-7xl px-3 sm:px-6">
+      <div class="flex h-16 items-center gap-2">
+        <button type="button" id="storeBack" class="hdr-btn" aria-label="Kembali ke beranda"><svg class="h-6 w-6"><use href="#i-chev-l"/></svg></button>
+        <h2 class="text-lg font-extrabold tracking-tight">Katalog Laptop Makassar</h2>
+      </div>
+      <div class="flex flex-col gap-2 pb-3 sm:flex-row">
+        <div class="sm:w-72">
+          <label for="storeKategori" class="sr-only">Pilih kategori</label>
+          <select id="storeKategori" class="store-field w-full"></select>
+        </div>
+        <div class="sm:flex-1">
+          <label for="storeCari" class="sr-only">Cari laptop</label>
+          <input id="storeCari" type="search" placeholder="Cari merek, seri, atau spesifikasi" autocomplete="off" class="store-field w-full">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="mx-auto max-w-7xl px-3 pb-16 pt-6 sm:px-6">
+    <p id="status" class="mb-4 text-sm text-gray-600" aria-live="polite"></p>
+    <div id="grid" class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-5"></div>
+    <div id="more" class="mt-10 text-center"></div>
+  </div>
+</div>
+
 <!-- ============ SECTION 5: POP-UP DETAIL PRODUK ============ -->
 <dialog id="detail" aria-labelledby="detailTitle">
   <div class="relative flex flex-col" style="max-height:inherit">
@@ -202,16 +198,7 @@
   </div>
 
   <nav class="min-h-0 flex-1 overflow-y-auto px-3 py-4" aria-label="Menu utama">
-    <p class="sb-title">Katalog</p>
-    <button type="button" class="sb-item" data-sb-all><span>Semua laptop</span><small>Lihat seluruh katalog</small></button>
-    <div id="sbKategori"></div>
-
-    <p class="sb-title mt-5">Pilihan cepat</p>
-    <button type="button" class="sb-item" data-sb-tag="promo"><span>Promo</span><small>Laptop dengan harga spesial</small></button>
-    <button type="button" class="sb-item" data-sb-tag="terlaris"><span>Terlaris</span><small>Paling banyak dicari</small></button>
-    <button type="button" class="sb-item" data-sb-tag="baru"><span>Baru masuk</span><small>Stok terbaru di toko</small></button>
-
-    <p class="sb-title mt-5">Toko</p>
+    <p class="sb-title">Toko</p>
     <button type="button" class="sb-item" data-goto="#lokasi"><span>Lokasi dan jam buka</span><small>Alamat, peta, dan jam operasional</small></button>
     <a data-maps target="_blank" rel="noopener" class="sb-item"><span>Buka di Google Maps</span><small>Petunjuk arah ke toko</small></a>
     <a data-ig target="_blank" rel="noopener" class="sb-item"><span>Instagram</span><small data-ig-text></small></a>
