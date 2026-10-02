@@ -93,14 +93,14 @@ tabs.forEach((t, i) => {
    Perubahan ditampung dulu, baru dikirim saat klik "Simpan".
    ===================================================================== */
 const SLOT_BENTO = [
-  { id: 'k1',    nama: 'Kotak 1 - Banner utama atas',        info: 'Lebar penuh',                  saran: '1600 × 336 px (rasio 4,8 : 1)' },
-  { id: 'k2',    nama: 'Kotak 2 - Gambar sedang (kiri)',     info: 'Sejajar dengan kotak 3',       saran: '1200 × 510 px (rasio 2,4 : 1)' },
-  { id: 'k3',    nama: 'Kotak 3 - Gambar sedang (kanan)',    info: 'Sejajar dengan kotak 2',       saran: '1200 × 510 px (rasio 2,4 : 1)' },
-  { id: 'k4',    nama: 'Kotak 4 - Banner di bawah area sedang', info: 'Banner lebar',              saran: '1600 × 506 px (rasio 3,2 : 1)' },
-  { id: 'k5',    nama: 'Kotak 5 - Gambar sedang (tegak)',    info: 'Di samping kotak 4, 6, 7',     saran: '800 × 1053 px (rasio 3 : 4)' },
-  { id: 'k6',    nama: 'Kotak 6 - Gambar kecil (kiri)',      info: 'Sejajar dengan kotak 7',       saran: '800 × 514 px (rasio 1,6 : 1)' },
-  { id: 'k7',    nama: 'Kotak 7 - Gambar kecil (kanan)',     info: 'Sejajar dengan kotak 6',       saran: '800 × 514 px (rasio 1,6 : 1)' },
-  { id: 'bawah', nama: 'Banner bawah',                       info: 'Lebar penuh, di bawah Bento',  saran: '1600 × 336 px (rasio 4,8 : 1)' }
+  { id: 'k1',    nama: 'Kotak 1 - Banner utama',            info: 'Lebar penuh, di bawah video',   saran: '1600 × 390 px (rasio 4,1 : 1)' },
+  { id: 'k2',    nama: 'Kotak 2 - Samping video (atas)',    info: 'Kolom kanan di laptop',         saran: '1176 × 420 px (rasio 2,8 : 1)' },
+  { id: 'k3',    nama: 'Kotak 3 - Samping video (tengah)',  info: 'Kolom kanan di laptop',         saran: '1176 × 420 px (rasio 2,8 : 1)' },
+  { id: 'k4',    nama: 'Kotak 4 - Baris bawah (kiri)',      info: 'Satu baris dengan kotak 6 dan 7', saran: '800 × 596 px (rasio 4 : 3)' },
+  { id: 'k5',    nama: 'Kotak 5 - Samping video (bawah)',   info: 'Kolom kanan di laptop',         saran: '1176 × 420 px (rasio 2,8 : 1)' },
+  { id: 'k6',    nama: 'Kotak 6 - Baris bawah (tengah)',    info: 'Satu baris dengan kotak 4 dan 7', saran: '800 × 596 px (rasio 4 : 3)' },
+  { id: 'k7',    nama: 'Kotak 7 - Baris bawah (kanan)',     info: 'Satu baris dengan kotak 4 dan 6', saran: '800 × 596 px (rasio 4 : 3)' },
+  { id: 'bawah', nama: 'Banner bawah',                      info: 'Lebar penuh, paling bawah',     saran: '1600 × 390 px (rasio 4,1 : 1)' }
 ];
 
 /* Link: kosong = tidak bisa diklik. "wa.me/628..." otomatis diberi https:// */
