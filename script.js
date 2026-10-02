@@ -1,28 +1,25 @@
 /* =====================================================================
    LAPTOP MAKASSAR - SCRIPT HALAMAN PENGUNJUNG
    Butuh (urutan): supabase-js -> supabase-config.js -> script.js
-   Data (produk, info toko, slider) semua dari Supabase + realtime.
+   Data (produk, info toko, Bento Grid) semua dari Supabase + realtime.
+   Responsif 100% lewat CSS Media Query; skrip ini TIDAK mengatur lebar layar.
    Daftar isi:
-   1. Keadaan & pembantu     5. Slider foto toko      9. Pencarian AI
-   2. Info toko              6. Halaman Toko         10. Data Supabase
-   3. Tema & sidebar         7. Keranjang            11. Mulai
-   4. Hero slider            8. Detail produk
+   1. Keadaan & pembantu     5. Rest Seller           9. Data Supabase
+   2. Info toko              6. Halaman Toko         10. Mulai
+   3. Tema & sidebar         7. Keranjang
+   4. Bento Grid             8. Detail produk + Pencarian AI
    ===================================================================== */
 
 /* ---------- 1. Keadaan & pembantu ---------- */
 const CONFIG = { ...CONFIG_AWAL };
 let PRODUK = [];
-let BANNER = [];
-const DEVICE = window.LM_HP ? 'hp' : 'desktop';
+let BENTO = [];
 const PAGE = 8;
 const MAKS_QTY = 5;
 const KEY_KERANJANG = 'lm_keranjang';
 const kurangGerak = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fotoErr = `onerror="this.onerror=null;this.src=window.FOTO_KOSONG"`;
 const waLink = teks => `https://wa.me/${String(CONFIG.wa || '').replace(/\D/g, '')}?text=${encodeURIComponent(teks)}`;
-
-window.addEventListener('resize', () => window.aturSkala && window.aturSkala());
-window.addEventListener('orientationchange', () => setTimeout(() => window.aturSkala && window.aturSkala(), 250));
 
 /* Kunci scroll halaman saat dialog/sidebar terbuka */
 let jumlahKunci = 0;
@@ -68,9 +65,6 @@ function terapkanConfig() {
   $$('[data-tt-text]').forEach(s => { s.textContent = handle(CONFIG.tiktok); });
   $$('[data-maps]').forEach(a => { a.href = CONFIG.maps_link; });
   $$('[data-mail]').forEach(a => { a.href = CONFIG.email ? 'mailto:' + CONFIG.email : '#'; a.hidden = !CONFIG.email; });
-  const peta = $('#peta');
-  if (peta && CONFIG.peta_embed_url && peta.getAttribute('src') !== CONFIG.peta_embed_url) peta.src = CONFIG.peta_embed_url;
-  if (peta) peta.closest('.peta').hidden = !CONFIG.peta_embed_url;
 }
 
 /* ---------- 3. Tema & sidebar ---------- */
@@ -105,6 +99,8 @@ function tutupSidebar(fokus = true) {
 btnMenu.addEventListener('click', bukaSidebar);
 $('#btnTutupMenu').addEventListener('click', () => tutupSidebar());
 scrim.addEventListener('click', () => tutupSidebar());
+/* Hanya merapikan status: bila layar melebar >= 768px, sidebar (disembunyikan CSS) ditutup agar scroll tidak terkunci */
+matchMedia('(min-width:768px)').addEventListener('change', e => { if (e.matches) tutupSidebar(false); });
 sidebar.addEventListener('click', e => {
   const go = e.target.closest('[data-goto]');
   if (go) { e.preventDefault(); tutupSidebar(false); gulirKe(go.dataset.goto); }
@@ -116,141 +112,43 @@ document.addEventListener('keydown', e => {
   else if (!storePage.hidden && !document.querySelector('dialog[open]')) tutupToko();
 });
 
-/* ---------- 4. Hero slider (foto + video) ---------- */
-const hero = { slides: [], idx: 0, timer: null, jeda: false, suara: false, ditahan: false, sig: '' };
-const heroEl = $('#hero'), heroTrack = $('#heroTrack');
-const IKON = id => `<svg><use href="#${id}"/></svg>`;
-
-function daftarHero() {
-  const utama = DEVICE === 'hp' ? 'hero_hp' : 'hero_desktop';
-  const cadangan = DEVICE === 'hp' ? 'hero_desktop' : 'hero_hp';
-  let l = BANNER.filter(b => b.bagian === utama);
-  if (!l.length) l = BANNER.filter(b => b.bagian === cadangan);
-  return l;
+/* ---------- 4. Bento Grid "Kunjungi toko kami" (tabel home_banners) ---------- */
+const SLOT_BENTO = ['k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'bawah'];
+function urlAman(u) {
+  const v = String(u || '').trim();
+  return /^(https?:\/\/|\/|#|mailto:|tel:)/i.test(v) ? v : '';
 }
-function renderHero() {
-  const l = daftarHero();
-  const sig = JSON.stringify(l.map(b => [b.id, b.url, b.jenis, b.judul, b.urutan]));
-  if (sig === hero.sig) return;
-  hero.sig = sig; hero.slides = l; hero.idx = 0; hero.jeda = false;
-  clearTimeout(hero.timer);
-
-  if (!l.length) {
-    heroTrack.innerHTML = `<div class="hero-slide"><div class="hero-kosong"><b>Laptop Makassar</b><span>Laptop baru dan bekas berkualitas</span></div></div>`;
-    $('#heroNav').hidden = true; $('#heroKontrol').hidden = true; $('#heroCap').textContent = '';
-    return;
-  }
-  heroTrack.innerHTML = l.map((b, i) => `<div class="hero-slide" aria-hidden="${i !== 0}">` + (b.jenis === 'video'
-    ? `<video src="${esc(b.url)}" muted playsinline preload="${i === 0 ? 'auto' : 'metadata'}" ${l.length === 1 ? 'loop' : ''}></video>`
-    : `<img src="${esc(b.url)}" alt="${esc(b.judul || 'Promo Laptop Makassar')}" ${i === 0 ? '' : 'loading="lazy"'} ${fotoErr}>`) + `</div>`).join('');
-  $$('video', heroTrack).forEach((v, i) => {
-    v.addEventListener('ended', () => { if (hero.slides.length > 1) heroKe(hero.idx + 1); });
-    v.addEventListener('error', () => { if (hero.slides[hero.idx] && heroTrack.children[hero.idx].contains(v)) jadwalkanHero(6000); });
+function renderBento() {
+  SLOT_BENTO.forEach((slot, i) => {
+    const el = $(`.bento-item[data-slot="${slot}"]`); if (!el) return;
+    const row = BENTO.find(b => b.slot === slot) || {};
+    const src = String(row.image_url || '').trim();
+    const link = urlAman(row.link_url);
+    const sig = src + '|' + link;
+    if (el.dataset.sig === sig) return;
+    el.dataset.sig = sig;
+    el.innerHTML = src ? `<img src="${esc(src)}" alt="Promo Laptop Makassar" ${i ? 'loading="lazy"' : ''} ${fotoErr}>` : '';
+    if (link) {
+      el.href = link;
+      if (/^https?:/i.test(link)) { el.target = '_blank'; el.rel = 'noopener'; }
+      else { el.removeAttribute('target'); el.removeAttribute('rel'); }
+    } else { el.removeAttribute('href'); el.removeAttribute('target'); el.removeAttribute('rel'); }
   });
-  $('#heroBars').innerHTML = l.map((_, i) => `<button type="button" aria-label="Slide ${i + 1}" data-i="${i}"></button>`).join('');
-  $('#heroNav').hidden = l.length < 2;
-  heroKe(0, true);
-}
-function slideAktif() { return hero.slides[hero.idx]; }
-function videoAktif() { return heroTrack.children[hero.idx]?.querySelector('video') || null; }
-function jadwalkanHero(ms) {
-  clearTimeout(hero.timer);
-  if (hero.slides.length < 2 || hero.ditahan || hero.jeda) return;
-  hero.timer = setTimeout(() => heroKe(hero.idx + 1), ms);
-}
-function heroKe(i, awal = false) {
-  const n = hero.slides.length; if (!n) return;
-  if (!awal) hero.jeda = false;
-  hero.idx = ((i % n) + n) % n;
-  heroTrack.style.transform = `translateX(-${hero.idx * 100}%)`;
-  $$('.hero-slide', heroTrack).forEach((s, k) => s.setAttribute('aria-hidden', String(k !== hero.idx)));
-  $$('#heroBars button').forEach((b, k) => b.setAttribute('aria-current', String(k === hero.idx)));
-  const s = slideAktif();
-  $('#heroCap').textContent = s.judul || '';
-  /* kontrol jeda/suara HANYA untuk slide video; slide foto tanpa kontrol */
-  $('#heroKontrol').hidden = s.jenis !== 'video';
-  $$('video', heroTrack).forEach(v => { v.pause(); v.currentTime = 0; v.muted = !hero.suara; });
-  perbaruiIkonHero();
-  clearTimeout(hero.timer);
-  if (s.jenis === 'video') {
-    const v = videoAktif();
-    if (v && !hero.ditahan) v.play().catch(() => jadwalkanHero(6000));
-  } else jadwalkanHero(5500);
-}
-function perbaruiIkonHero() {
-  $('#heroJeda').innerHTML = IKON(hero.jeda ? 'i-play' : 'i-pause');
-  $('#heroJeda').setAttribute('aria-label', hero.jeda ? 'Putar video' : 'Jeda video');
-  $('#heroSuara').innerHTML = IKON(hero.suara ? 'i-vol' : 'i-mute');
-  $('#heroSuara').setAttribute('aria-label', hero.suara ? 'Matikan suara' : 'Nyalakan suara');
-}
-function heroTahan(ya) {
-  hero.ditahan = ya;
-  const v = videoAktif();
-  if (ya) { clearTimeout(hero.timer); if (v) v.pause(); }
-  else if (slideAktif()) {
-    if (v && !hero.jeda) v.play().catch(() => {});
-    else if (slideAktif().jenis !== 'video') jadwalkanHero(5500);
-  }
-}
-$('#heroJeda').addEventListener('click', () => {
-  const v = videoAktif(); if (!v) return;
-  hero.jeda = !hero.jeda;
-  if (hero.jeda) v.pause(); else v.play().catch(() => {});
-  perbaruiIkonHero();
-});
-$('#heroSuara').addEventListener('click', () => {
-  hero.suara = !hero.suara;
-  $$('video', heroTrack).forEach(v => { v.muted = !hero.suara; });
-  perbaruiIkonHero();
-});
-$('#heroPrev').addEventListener('click', () => heroKe(hero.idx - 1));
-$('#heroNext').addEventListener('click', () => heroKe(hero.idx + 1));
-$('#heroBars').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) heroKe(+b.dataset.i); });
-pasangGeser(heroEl, d => heroKe(hero.idx + d));
-document.addEventListener('visibilitychange', () => heroTahan(document.hidden || !storePage.hidden));
-
-/* Geser jari/mouse kiri-kanan */
-function pasangGeser(el, aksi) {
-  let x0 = null, y0 = 0;
-  el.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; x0 = e.clientX; y0 = e.clientY; });
-  el.addEventListener('pointerup', e => {
-    if (x0 === null) return;
-    const dx = e.clientX - x0, dy = e.clientY - y0; x0 = null;
-    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) aksi(dx < 0 ? 1 : -1);
-  });
-  el.addEventListener('pointercancel', () => { x0 = null; });
 }
 
-/* ---------- 5. Slider foto "Kunjungi toko kami" (maks. 5) ---------- */
-const toko = { fotos: [], idx: 0, timer: null, sig: '' };
-function renderSliderToko() {
-  const l = BANNER.filter(b => b.bagian === 'toko' && b.jenis === 'foto').slice(0, 5);
-  const sig = JSON.stringify(l.map(b => [b.id, b.url, b.judul, b.urutan]));
-  if (sig === toko.sig) return;
-  toko.sig = sig; toko.fotos = l; toko.idx = 0;
-  const root = $('#tokoSlider');
-  if (!l.length) {
-    $('#tokoTrack').innerHTML = `<div><img src="images/img-01.jpg" alt="Tampak depan toko Laptop Makassar" ${fotoErr}></div>`;
-    $('#tokoDots').innerHTML = ''; $$('.tslider-prev,.tslider-next', root).forEach(b => b.hidden = true);
-    clearTimeout(toko.timer); return;
-  }
-  $('#tokoTrack').innerHTML = l.map((b, i) => `<div><img src="${esc(b.url)}" alt="${esc(b.judul || 'Foto toko Laptop Makassar')}" ${i ? 'loading="lazy"' : ''} ${fotoErr}></div>`).join('');
-  $('#tokoDots').innerHTML = l.length > 1 ? l.map((_, i) => `<button type="button" aria-label="Foto ${i + 1}" data-i="${i}"></button>`).join('') : '';
-  $$('.tslider-prev,.tslider-next', root).forEach(b => b.hidden = l.length < 2);
-  tokoKe(0);
+/* ---------- 5. Rest Seller (produk berlabel "Terlaris"; jika belum ada, produk terbaru) ---------- */
+function renderRestSeller() {
+  const sec = $('#restSeller'), grid = $('#restGrid');
+  if (sedangMemuat) { sec.hidden = false; grid.innerHTML = Array.from({ length: 4 }, () => '<div class="skel"></div>').join(''); return; }
+  const terlaris = PRODUK.filter(p => p.tags.includes('terlaris'));
+  const l = (terlaris.length ? terlaris : PRODUK).slice(0, PAGE);
+  sec.hidden = !l.length;
+  grid.innerHTML = l.map(kartuProduk).join('');
 }
-function tokoKe(i) {
-  const n = toko.fotos.length; if (!n) return;
-  toko.idx = ((i % n) + n) % n;
-  $('#tokoTrack').style.transform = `translateX(-${toko.idx * 100}%)`;
-  $$('#tokoDots button').forEach((b, k) => b.setAttribute('aria-current', String(k === toko.idx)));
-  clearTimeout(toko.timer);
-  if (n > 1 && !kurangGerak()) toko.timer = setTimeout(() => tokoKe(toko.idx + 1), 5000);
-}
-$('#tokoSlider .tslider-prev').addEventListener('click', () => tokoKe(toko.idx - 1));
-$('#tokoSlider .tslider-next').addEventListener('click', () => tokoKe(toko.idx + 1));
-$('#tokoDots').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) tokoKe(+b.dataset.i); });
-pasangGeser($('#tokoSlider'), d => tokoKe(toko.idx + d));
+$('#restGrid').addEventListener('click', e => {
+  const t = e.target.closest('[data-tambah]'); if (t) { tambahKeranjang(t.dataset.tambah); return; }
+  const o = e.target.closest('[data-open]'); if (o) bukaDetail(o.dataset.open);
+});
 
 /* ---------- 6. Halaman Toko (#toko) ---------- */
 const storePage = $('#storePage'), storeSelect = $('#storeKategori'), storeCari = $('#storeCari');
@@ -262,7 +160,6 @@ function sinkronToko() {
   if (storePage.hidden !== buka) return;
   storePage.hidden = !buka;
   $('#app').inert = buka;
-  heroTahan(buka);
   if (buka) storePage.scrollTop = 0;
 }
 function bukaToko() {
@@ -505,6 +402,11 @@ function cariLokal(q) {
   };
 }
 let nomorCari = 0;
+const riwayatCari = [];   // percakapan singkat dengan asisten (maks. 6 giliran dikirim ke server)
+/* Teks AI -> HTML aman; alamat http(s) otomatis menjadi link aktif */
+function teksBerTaut(teks) {
+  return esc(teks).replace(/https?:\/\/[^\s<]*[^\s<.,;:!?)]/g, u => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`);
+}
 async function jalankanCari() {
   const q = cariInput.value.trim(); if (!q) { cariInput.focus(); return; }
   const no = ++nomorCari;
@@ -512,13 +414,15 @@ async function jalankanCari() {
   await siapProduk;
   let data;
   try {
-    const r = await sb.functions.invoke('cari-ai', { body: { q } });
+    const r = await sb.functions.invoke('cari-ai', { body: { q, riwayat: riwayatCari.slice(-6) } });
     if (r.error || !r.data || r.data.error) throw r.error || new Error(r.data?.error || 'kosong');
     data = r.data;
+    riwayatCari.push({ q, jawab: String(data.ringkasan || '').slice(0, 600) });
   } catch (e) { console.warn('Pencarian AI gagal, memakai pencarian lokal:', e); data = cariLokal(q); }
   if (no !== nomorCari) return;
   const l = (data.hasil || []).map(h => ({ p: cariProduk(h.id), alasan: h.alasan })).filter(x => x.p);
-  cariHasil.innerHTML = `<p class="cari-ring">${esc(data.ringkasan || '')}</p>` + (l.length ? l.map(({ p, alasan }) => `
+  const jenis = data.jenis || 'rekomendasi';
+  cariHasil.innerHTML = `<p class="cari-ring">${teksBerTaut(data.ringkasan || '')}</p>` + (l.length ? l.map(({ p, alasan }) => `
     <div class="cari-kartu">
       <div class="kr-foto"><img src="${esc(p.foto)}" alt="" ${fotoErr}></div>
       <div>
@@ -530,14 +434,14 @@ async function jalankanCari() {
           <button type="button" class="btn btn-kecil" data-tambah="${esc(p.id)}">Tambah</button>
         </div>
       </div>
-    </div>`).join('') : '<p class="kecil">Belum ada yang cocok. Coba ubah anggaran atau kebutuhanmu.</p>');
+    </div>`).join('') : (jenis === 'rekomendasi' ? '<p class="kecil">Belum ada yang cocok. Coba ubah anggaran atau kebutuhanmu.</p>' : ''));
 }
 cariHasil.addEventListener('click', e => {
   const t = e.target.closest('[data-tambah]'); if (t) { tambahKeranjang(t.dataset.tambah); return; }
   const o = e.target.closest('[data-open]'); if (o) { dialogCari.close(); bukaDetail(o.dataset.open); }
 });
 
-/* ---------- 10. Data dari Supabase ---------- */
+/* ---------- 9. Data dari Supabase ---------- */
 function dariDb(r) {
   let spek = r.spek;
   if (typeof spek === 'string') { try { spek = JSON.parse(spek); } catch { spek = {}; } }
@@ -563,21 +467,21 @@ async function muatConfig() {
   const c = data && data[0]; if (!c) return;
   Object.keys(CONFIG_AWAL).forEach(k => { if (c[k] !== undefined && c[k] !== null && String(c[k]).trim() !== '') CONFIG[k] = c[k]; });
 }
-async function muatBanner() {
-  const { data, error } = await sb.from('banner').select('*').order('urutan', { ascending: true });
+async function muatBento() {
+  const { data, error } = await sb.from('home_banners').select('slot,image_url,link_url');
   if (error) throw error;
-  BANNER = data || [];
+  BENTO = data || [];
 }
 let terakhirMuat = 0, siapProduk = Promise.resolve();
 async function muatSemua() {
-  sedangMemuat = !PRODUK.length; gagalMemuat = false; renderKatalog();
+  sedangMemuat = !PRODUK.length; gagalMemuat = false; renderKatalog(); renderRestSeller();
   const pProduk = muatProduk();
   siapProduk = pProduk.catch(() => {});
-  const hasil = await Promise.allSettled([pProduk, muatConfig(), muatBanner()]);
+  const hasil = await Promise.allSettled([pProduk, muatConfig(), muatBento()]);
   hasil.forEach(h => { if (h.status === 'rejected') console.error('Gagal memuat dari Supabase:', h.reason); });
   gagalMemuat = hasil[0].status === 'rejected';
   sedangMemuat = false; terakhirMuat = Date.now();
-  renderKatalog(); terapkanConfig(); renderHero(); renderSliderToko(); bersihkanKeranjang();
+  renderKatalog(); renderRestSeller(); terapkanConfig(); renderBento(); bersihkanKeranjang();
 }
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && Date.now() - terakhirMuat > 20000) muatSemua();
@@ -589,10 +493,9 @@ try {
     .subscribe();
 } catch (e) { console.warn('Realtime tidak aktif:', e); }
 
-/* ---------- 11. Mulai ---------- */
+/* ---------- 10. Mulai ---------- */
 terapkanConfig();
-renderHero();
-renderSliderToko();
+renderBento();
 renderKeranjang();
 muatSemua();
 sinkronToko();

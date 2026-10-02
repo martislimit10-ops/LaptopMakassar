@@ -1,7 +1,7 @@
 /* =====================================================================
    LAPTOP MAKASSAR - PANEL ADMIN
    Butuh: supabase-js -> supabase-config.js -> admin.js
-   Tab: Hero Desktop, Hero HP, Slider Toko, Info & Kontak, Produk.
+   Tab: Bento Grid (7 kotak + banner bawah), Info & Kontak, Produk.
    Sekali klik "Simpan" -> data masuk Supabase -> halaman depan
    terbarui otomatis (realtime), tanpa mengubah file di GitHub.
    ===================================================================== */
@@ -89,131 +89,131 @@ tabs.forEach((t, i) => {
 });
 
 /* =====================================================================
-   MANAJER MEDIA (dipakai 3 tab: hero_desktop, hero_hp, toko)
+   BENTO GRID BERANDA (tabel home_banners, satu baris per kotak)
    Perubahan ditampung dulu, baru dikirim saat klik "Simpan".
    ===================================================================== */
-const KONFIG_MEDIA = {
-  hero_desktop: { judul: 'Media Hero Desktop', maks: 8, video: true, rasio: '',
-    info: 'Tampil di laptop/PC. Gunakan foto/video LANDSCAPE 16:9 (contoh 1920×1080).' },
-  hero_hp: { judul: 'Media Hero HP', maks: 8, video: true, rasio: 'r-hp',
-    info: 'Tampil di HP. Gunakan foto/video POTRET 9:16 (contoh 1080×1920).' },
-  toko: { judul: 'Slider "Kunjungi Toko Kami"', maks: 5, video: false, rasio: '',
-    info: 'Khusus foto, maksimal 5. Rasio 16:10 disarankan (contoh 1600×1000).' }
-};
+const SLOT_BENTO = [
+  { id: 'k1',    nama: 'Kotak 1 - Banner utama atas',        info: 'Lebar penuh',                  saran: '1600 × 336 px (rasio 4,8 : 1)' },
+  { id: 'k2',    nama: 'Kotak 2 - Gambar sedang (kiri)',     info: 'Sejajar dengan kotak 3',       saran: '1200 × 510 px (rasio 2,4 : 1)' },
+  { id: 'k3',    nama: 'Kotak 3 - Gambar sedang (kanan)',    info: 'Sejajar dengan kotak 2',       saran: '1200 × 510 px (rasio 2,4 : 1)' },
+  { id: 'k4',    nama: 'Kotak 4 - Banner di bawah area sedang', info: 'Banner lebar',              saran: '1600 × 506 px (rasio 3,2 : 1)' },
+  { id: 'k5',    nama: 'Kotak 5 - Gambar sedang (tegak)',    info: 'Di samping kotak 4, 6, 7',     saran: '800 × 1053 px (rasio 3 : 4)' },
+  { id: 'k6',    nama: 'Kotak 6 - Gambar kecil (kiri)',      info: 'Sejajar dengan kotak 7',       saran: '800 × 514 px (rasio 1,6 : 1)' },
+  { id: 'k7',    nama: 'Kotak 7 - Gambar kecil (kanan)',     info: 'Sejajar dengan kotak 6',       saran: '800 × 514 px (rasio 1,6 : 1)' },
+  { id: 'bawah', nama: 'Banner bawah',                       info: 'Lebar penuh, di bawah Bento',  saran: '1600 × 336 px (rasio 4,8 : 1)' }
+];
 
-function buatManajerMedia(root, bagian) {
-  const cfg = KONFIG_MEDIA[bagian];
-  let items = [];
+/* Link: kosong = tidak bisa diklik. "wa.me/628..." otomatis diberi https:// */
+function rapikanLink(v) {
+  v = String(v || '').trim();
+  if (!v) return { ok: true, v: null };
+  if (/^(https?:\/\/|mailto:|tel:|\/|#)/i.test(v)) return { ok: true, v };
+  if (/^[^\s/]+\.[^\s]+$/.test(v)) return { ok: true, v: 'https://' + v };
+  return { ok: false, v };
+}
+
+function buatManajerBento(root) {
+  let st = {};
   let sibuk = false;
 
   root.innerHTML = `
-    <div class="bagian-kepala"><div><h2>${esc(cfg.judul)}</h2><p class="muted" data-hitung></p></div></div>
-    <p class="aturan">${esc(cfg.info)} Urutan slide mengikuti urutan daftar di bawah.${cfg.video ? ' Video maksimal ' + BATAS_MB + ' MB (disarankan MP4/H.264 di bawah 15 MB agar cepat dimuat).' : ''}</p>
-    <div class="daftar" data-daftar></div>
-    <div class="unggah">
-      <label for="u-${bagian}">Tambah ${cfg.video ? 'foto atau video' : 'foto'}</label>
-      <input id="u-${bagian}" type="file" multiple accept="${cfg.video ? 'image/*,video/mp4,video/webm,video/quicktime' : 'image/*'}">
-      <small>File baru baru dikirim setelah kamu menekan Simpan.</small>
-    </div>
+    <div class="bagian-kepala"><div><h2>Bento Grid &quot;Kunjungi toko kami&quot;</h2><p class="muted" data-hitung></p></div></div>
+    <p class="aturan">Setiap kotak = 1 gambar + 1 link (opsional). Gambar ditampilkan bersih tanpa teks tambahan. Di HP, gambar yang sangat lebar (banner) terpotong sedikit di kiri-kanan, jadi taruh bagian penting di tengah. Perubahan baru dikirim setelah menekan Simpan.</p>
+    <div class="bento-adm" data-daftar></div>
     <div class="bar-simpan"><button type="button" class="btn" data-simpan>Simpan</button><span class="pesan" data-pesan role="status"></span></div>`;
-  const elDaftar = $('[data-daftar]', root), elHitung = $('[data-hitung]', root), elPesan = $('[data-pesan]', root), btnSimpan = $('[data-simpan]', root), inputFile = $('input[type=file]', root);
+  const elDaftar = $('[data-daftar]', root), elHitung = $('[data-hitung]', root), elPesan = $('[data-pesan]', root), btnSimpan = $('[data-simpan]', root);
 
-  const aktifJumlah = () => items.filter(x => !x.hapus).length;
+  const kosongkan = () => { st = {}; SLOT_BENTO.forEach(s => { st[s.id] = { url: '', link: '', linkAwal: '', file: null, preview: null, hapus: false }; }); };
+  kosongkan();
 
   function gambar() {
-    elHitung.textContent = `${aktifJumlah()} dari maksimal ${cfg.maks} slide`;
-    if (!items.length) { elDaftar.innerHTML = '<div class="kosong">Belum ada media. Tambahkan lewat kotak di bawah.</div>'; return; }
-    elDaftar.innerHTML = items.map((x, i) => `
-      <div class="media ${x.file ? 'baru' : ''} ${x.hapus ? 'hapus' : ''}" data-k="${i}">
-        <div class="thumb ${cfg.rasio}">${x.jenis === 'video' ? `<video src="${esc(x.url)}" muted preload="metadata"></video>` : `<img src="${esc(x.url)}" alt="" onerror="this.onerror=null;this.src=window.FOTO_KOSONG">`}</div>
-        <div class="media-form">
+    const terisi = SLOT_BENTO.filter(s => { const x = st[s.id]; return x.file || (x.url && !x.hapus); }).length;
+    elHitung.textContent = `${terisi} dari ${SLOT_BENTO.length} kotak sudah berisi gambar`;
+    elDaftar.innerHTML = SLOT_BENTO.map(s => {
+      const x = st[s.id];
+      const tampil = x.preview || (x.hapus ? '' : x.url);
+      const aksiHapus = x.file ? 'Batalkan file baru' : x.hapus ? 'Batalkan hapus' : 'Hapus gambar';
+      return `
+      <div class="slot ${x.file ? 'baru' : ''} ${x.hapus ? 'hapus' : ''}" data-slot="${s.id}">
+        <div class="slot-thumb">${tampil ? `<img src="${esc(tampil)}" alt="" onerror="this.onerror=null;this.src=window.FOTO_KOSONG">` : '<span class="muted">Belum ada gambar</span>'}</div>
+        <div class="slot-isi">
+          <b>${esc(s.nama)}</b>
+          <small>${esc(s.info)}. Saran ukuran: ${esc(s.saran)}</small>
           <div class="media-baris">
-            <span class="tag">${x.jenis === 'video' ? 'Video' : 'Foto'}</span>
             ${x.file ? '<span class="tag tag-baru">Baru, belum disimpan</span>' : ''}
             ${x.hapus ? '<span class="tag tag-baru">Akan dihapus</span>' : ''}
-            <span class="muted grow">${esc(x.file ? x.file.name : '')}</span>
           </div>
-          <div class="media-baris">
-            <input class="grow" data-f="judul" maxlength="120" placeholder="Teks keterangan (opsional)" value="${esc(x.judul)}" aria-label="Teks keterangan">
-            <label class="sw"><input type="checkbox" data-f="aktif" ${x.aktif ? 'checked' : ''}> Tampilkan</label>
-          </div>
-          <div class="media-baris">
-            <button type="button" class="btn btn-garis btn-kecil" data-aksi="naik" ${i === 0 ? 'disabled' : ''} aria-label="Naikkan">&uarr; Naik</button>
-            <button type="button" class="btn btn-garis btn-kecil" data-aksi="turun" ${i === items.length - 1 ? 'disabled' : ''} aria-label="Turunkan">&darr; Turun</button>
-            <button type="button" class="btn btn-bahaya btn-kecil" data-aksi="hapus">${x.hapus ? 'Batalkan hapus' : 'Hapus'}</button>
-          </div>
+          <label for="bf-${s.id}">${x.url || x.file ? 'Ganti gambar' : 'Unggah gambar'}</label>
+          <input id="bf-${s.id}" type="file" accept="image/*" data-aksi="file">
+          <label for="bl-${s.id}">Link tujuan (opsional)</label>
+          <input id="bl-${s.id}" type="text" inputmode="url" data-f="link" placeholder="https://..." value="${esc(x.link)}" autocomplete="off">
+          <div class="media-baris"><button type="button" class="btn btn-bahaya btn-kecil" data-aksi="hapus" ${!x.url && !x.file ? 'disabled' : ''}>${aksiHapus}</button></div>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }
 
   elDaftar.addEventListener('input', e => {
-    const k = e.target.closest('[data-k]'); const f = e.target.dataset.f; if (!k || !f) return;
-    const it = items[+k.dataset.k];
-    it[f] = f === 'aktif' ? e.target.checked : e.target.value;
+    const k = e.target.closest('[data-slot]'); if (!k || e.target.dataset.f !== 'link') return;
+    st[k.dataset.slot].link = e.target.value;
+  });
+  elDaftar.addEventListener('change', e => {
+    const k = e.target.closest('[data-slot]'); if (!k || e.target.dataset.aksi !== 'file') return;
+    const x = st[k.dataset.slot], f = e.target.files[0]; if (!f) return;
+    if (!f.type.startsWith('image/')) { e.target.value = ''; return toast(`"${f.name}" bukan gambar`); }
+    if (f.size > BATAS_MB * 1024 * 1024) { e.target.value = ''; return toast(`"${f.name}" lebih dari ${BATAS_MB} MB`); }
+    if (x.preview) URL.revokeObjectURL(x.preview);
+    x.file = f; x.preview = URL.createObjectURL(f); x.hapus = false;
+    setPesan(elPesan, ''); gambar();
   });
   elDaftar.addEventListener('click', e => {
-    const b = e.target.closest('[data-aksi]'), k = e.target.closest('[data-k]'); if (!b || !k) return;
-    const i = +k.dataset.k, it = items[i];
-    if (b.dataset.aksi === 'naik' && i > 0) [items[i - 1], items[i]] = [items[i], items[i - 1]];
-    else if (b.dataset.aksi === 'turun' && i < items.length - 1) [items[i + 1], items[i]] = [items[i], items[i + 1]];
-    else if (b.dataset.aksi === 'hapus') {
-      if (it.file) { URL.revokeObjectURL(it.url); items.splice(i, 1); }   // belum tersimpan: langsung buang
-      else {
-        if (it.hapus) { it.hapus = false; if (aktifJumlah() > cfg.maks) { it.hapus = true; return toast(`Maksimal ${cfg.maks} slide`); } }
-        else it.hapus = true;
-      }
-    }
+    const b = e.target.closest('[data-aksi="hapus"]'), k = e.target.closest('[data-slot]'); if (!b || !k) return;
+    const x = st[k.dataset.slot];
+    if (x.file) { URL.revokeObjectURL(x.preview); x.file = x.preview = null; }
+    else x.hapus = !x.hapus;
     gambar();
   });
 
-  inputFile.addEventListener('change', () => {
-    setPesan(elPesan, '');
-    for (const f of inputFile.files) {
-      const video = f.type.startsWith('video/'), foto = f.type.startsWith('image/');
-      if (!foto && !(video && cfg.video)) { toast(`"${f.name}" dilewati: jenis file tidak didukung`); continue; }
-      if (aktifJumlah() >= cfg.maks) { toast(`Maksimal ${cfg.maks} slide. Hapus salah satu dulu.`); break; }
-      if (f.size > BATAS_MB * 1024 * 1024) { toast(`"${f.name}" lebih dari ${BATAS_MB} MB`); continue; }
-      items.push({ id: null, file: f, jenis: video ? 'video' : 'foto', url: URL.createObjectURL(f), judul: '', aktif: true, hapus: false });
-    }
-    inputFile.value = ''; gambar();
-  });
-
   async function muat() {
-    const { data, error } = await sb.from('banner').select('*').eq('bagian', bagian).order('urutan', { ascending: true }).order('id', { ascending: true });
+    const { data, error } = await sb.from('home_banners').select('*');
     if (error) { elDaftar.innerHTML = `<div class="kosong">Gagal memuat: ${esc(pesanGalat(error))}. Pastikan schema.sql sudah dijalankan.</div>`; return; }
-    items = (data || []).map(b => ({ id: b.id, file: null, jenis: b.jenis, url: b.url, judul: b.judul || '', aktif: b.aktif, hapus: false }));
+    Object.values(st).forEach(x => { if (x.preview) URL.revokeObjectURL(x.preview); });
+    kosongkan();
+    (data || []).forEach(r => { if (st[r.slot]) Object.assign(st[r.slot], { url: r.image_url || '', link: r.link_url || '', linkAwal: r.link_url || '' }); });
     gambar();
   }
 
   btnSimpan.addEventListener('click', async () => {
     if (sibuk) return;
-    if (aktifJumlah() > cfg.maks) return setPesan(elPesan, `Maksimal ${cfg.maks} slide.`, true);
+    /* validasi semua link dulu, sebelum mengunggah apa pun */
+    const baris = [];
+    for (const s of SLOT_BENTO) {
+      const x = st[s.id], l = rapikanLink(x.link);
+      if (!l.ok) return setPesan(elPesan, `Link "${s.nama}" tidak valid. Awali dengan https://`, true);
+      if (x.file || x.hapus || (l.v || '') !== (x.linkAwal || '')) baris.push({ s, x, link: l.v });
+    }
+    if (!baris.length) return setPesan(elPesan, 'Tidak ada perubahan untuk disimpan.');
     sibuk = true; btnSimpan.disabled = true; setPesan(elPesan, 'Menyimpan...');
+    const baru = [], lama = [], rows = [];
     try {
-      /* 1) hapus  2) ubah yang lama  3) unggah + tambah yang baru (urutan ini menjaga batas 5 foto toko) */
-      for (const x of items.filter(x => x.hapus && x.id)) {
-        const { error } = await sb.from('banner').delete().eq('id', x.id); if (error) throw error;
-        await hapusFileStorage(x.url);
+      for (const { s, x, link } of baris) {
+        let image_url = x.url || null;
+        if (x.file) {
+          setPesan(elPesan, `Mengunggah ${s.nama}...`);
+          image_url = await unggah(x.file, 'bento'); baru.push(image_url);
+          if (x.url) lama.push(x.url);
+        } else if (x.hapus) { image_url = null; if (x.url) lama.push(x.url); }
+        rows.push({ slot: s.id, image_url, link_url: link, updated_at: new Date().toISOString() });
       }
-      const sisa = items.filter(x => !x.hapus);
-      for (const [i, x] of sisa.entries()) {
-        if (x.id) {
-          const { error } = await sb.from('banner').update({ judul: x.judul.trim() || null, urutan: i + 1, aktif: x.aktif }).eq('id', x.id);
-          if (error) throw error;
-        }
-      }
-      for (const [i, x] of sisa.entries()) {
-        if (!x.file) continue;
-        setPesan(elPesan, `Mengunggah ${x.file.name}...`);
-        const url = await unggah(x.file, bagian);
-        const { error } = await sb.from('banner').insert({ bagian, jenis: x.jenis, url, judul: x.judul.trim() || null, urutan: i + 1, aktif: x.aktif });
-        if (error) { await hapusFileStorage(url); throw error; }
-      }
+      const { error } = await sb.from('home_banners').upsert(rows, { onConflict: 'slot' });
+      if (error) throw error;
+      for (const u of lama) await hapusFileStorage(u);
       await muat();
       setPesan(elPesan, 'Tersimpan. Tampilan website terbarui otomatis.'); toast('Tersimpan');
     } catch (e) {
-      console.error(e); setPesan(elPesan, 'Gagal menyimpan: ' + pesanGalat(e), true);
-      await muat();
+      console.error(e);
+      for (const u of baru) await hapusFileStorage(u);   // batalkan unggahan yatim
+      setPesan(elPesan, 'Gagal menyimpan: ' + pesanGalat(e), true);
     } finally { sibuk = false; btnSimpan.disabled = false; }
   });
 
@@ -330,9 +330,8 @@ formProduk.addEventListener('submit', async e => {
 });
 
 /* ---------- Mulai ---------- */
-const manajer = {};
-$$('[data-media]').forEach(root => { manajer[root.dataset.media] = buatManajerMedia(root, root.dataset.media); });
-function muatSemuaTab() { Object.values(manajer).forEach(m => m.muat()); muatInfo(); muatProduk(); }
+const manajerBento = buatManajerBento($('#pnl-bento'));
+function muatSemuaTab() { manajerBento.muat(); muatInfo(); muatProduk(); }
 
 (async function mulai() {
   const nama = location.hash.slice(1);
