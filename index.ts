@@ -38,11 +38,10 @@ const CADANGAN = {
   maps_link: "https://maps.app.goo.gl/CrUqGD1NqXt19Kpy9",
 };
 
-// Alamat Cabang
-const ALAMAT_MAKASSAR = "Jl. Sepakat, Tamarunang, Kec. Somba Opu, Kabupaten Gowa, Sulawesi Selatan 92112";
-
-// Jam Operasional
-const JAM_OPERASIONAL = "Senin - Sabtu: 09:00 - 23:00 WITA, Minggu: 08:00 - 23:00 WITA";
+// TODO (WAJIB DIISI): alamat cabang MAKASSAR tidak ada di file proyek, jadi sengaja dikosongkan
+// agar AI tidak mengarang. Isi dengan alamat lengkap (dan link Google Maps bila ada).
+const ALAMAT_MAKASSAR = "";
+const MAPS_MAKASSAR = "";
 
 // Ketentuan garansi (sama dengan yang tampil di detail produk di website).
 const GARANSI = [

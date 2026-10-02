@@ -1,16 +1,14 @@
 /* =====================================================================
    LAPTOP MAKASSAR - STYLE (vanilla CSS, tanpa framework)
-   Responsif MURNI CSS Media Query:
-   - HP     : max-width 767px
-   - Laptop : min-width 768px
-   Tidak ada skrip yang mengunci lebar layar atau mendeteksi sentuhan/kursor.
+   Prinsip: HP dikunci kolom 480px di tengah; laptop/PC selebar layar.
+   Semua gaya khusus laptop diawali html[data-device="desktop"].
    ===================================================================== */
 :root{
   --bg:#fafafa; --surface:#fff; --surface-2:#f3f4f6;
   --ink:#111827; --ink-2:#4b5563; --ink-3:#6b7280;
   --garis:#e5e7eb; --aksen:#1f2937; --aksen-ink:#fff;
   --merah:#9b1c1c; --hijau:#166534;
-  --footer:#f1f2f4; --r:14px;
+  --footer:#f1f2f4; --r:14px; --kolom:480px;
 }
 html[data-tema="gelap"]{
   --bg:#0f1115; --surface:#171a20; --surface-2:#1f232b;
@@ -34,8 +32,13 @@ ul{padding:0;list-style:none}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .lompat{position:absolute;left:8px;top:-60px;z-index:100;background:var(--aksen);color:var(--aksen-ink);padding:8px 14px;border-radius:8px}
 .lompat:focus{top:8px}
-svg.ik,.ikon svg,.btn svg,.sosmed svg{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+svg.ik,.ikon svg,.bulat svg,.btn svg,.sosmed svg{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 svg.ik{width:18px;height:18px;flex:none}
+
+/* ---------- Kolom HP ---------- */
+html[data-device="hp"] body{background:#e8e9ec}
+html[data-device="hp"][data-tema="gelap"] body{background:#06070a}
+html[data-device="hp"] #app{max-width:var(--kolom);margin:0 auto;background:var(--bg);min-height:var(--vh100,100vh);box-shadow:0 0 0 1px var(--garis)}
 
 .wadah{width:100%;max-width:1200px;margin:0 auto;padding:0 16px}
 
@@ -46,47 +49,65 @@ svg.ik{width:18px;height:18px;flex:none}
 .btn-garis{background:transparent;color:var(--ink);border-color:var(--garis)}
 .btn-garis:hover{border-color:var(--ink);opacity:1}
 .btn-blok{width:100%}
-.btn-kecil{height:38px;padding:0 10px;font-size:13px;white-space:nowrap}
+.btn-kecil{height:38px;padding:0 14px;font-size:13px}
 .field{height:44px;width:100%;border:1px solid var(--garis);border-radius:12px;background:var(--surface);color:var(--ink);padding:0 14px;font:inherit;font-size:14px}
 .field::placeholder{color:var(--ink-3)}
 .kecil{font-size:13px;color:var(--ink-3)}
+.tautan{display:inline-block;margin-top:6px;font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:4px}
 
 .ikon{position:relative;width:40px;height:40px;display:grid;place-items:center;border:0;border-radius:10px;background:none}
 .ikon:hover{background:var(--surface-2)}
 .ikon svg{width:22px;height:22px}
 .badge{position:absolute;top:3px;right:1px;min-width:16px;height:16px;padding:0 4px;display:grid;place-items:center;border-radius:8px;background:var(--merah);color:#fff;font-size:10px;font-weight:700;line-height:1}
 html[data-tema="gelap"] .badge{color:#111827}
+.bulat{width:34px;height:34px;display:grid;place-items:center;border:0;border-radius:50%;background:rgba(17,24,39,.55);color:#fff;backdrop-filter:blur(4px)}
+.bulat:hover{background:rgba(17,24,39,.75)}
+.bulat svg{width:18px;height:18px}
 
-/* ---------- Header (HP: logo absolute center | laptop: logo kiri, menu tengah) ---------- */
+/* ---------- Header (logo presisi di tengah) ---------- */
 .hdr{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--garis)}
 .hdr-in{position:relative;height:60px;max-width:1600px;margin:0 auto;padding:0 8px;display:flex;align-items:center;justify-content:space-between}
-.brand{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:calc(100% - 192px);display:flex;align-items:center;gap:8px;white-space:nowrap;font-size:15px;font-weight:600;letter-spacing:-.01em}
-.brand img{flex:none;width:28px;height:28px;border-radius:8px;object-fit:cover}
-.brand span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.brand{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;white-space:nowrap;font-size:15px;font-weight:600;letter-spacing:-.01em}
+.brand img{width:28px;height:28px;border-radius:8px;object-fit:cover}
 .hdr-kanan{display:flex}
-.nav-utama{display:none}
-.nav-utama a{padding:8px 2px;font-size:14px;font-weight:500;color:var(--ink-2);white-space:nowrap}
-.nav-utama a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:6px}
 
-/* ---------- Blok & judul ---------- */
-.blok{padding:40px 0 0;scroll-margin-top:68px}
-.judul{font-size:22px;font-weight:700;letter-spacing:-.02em;margin-bottom:20px;text-align:center}
+/* ---------- Hero ---------- */
+.hero{position:relative;overflow:hidden;background:#0b0d10;color:#fff;touch-action:pan-y;aspect-ratio:9/16;max-height:calc(var(--vh100,100svh) - 60px);width:100%}
+.hero-track{position:absolute;inset:0;display:flex;transition:transform .5s ease}
+.hero-slide{position:relative;flex:0 0 100%;height:100%;background:#0b0d10}
+.hero-slide img,.hero-slide video{width:100%;height:100%;object-fit:cover}
+.hero-kosong{display:grid;place-content:center;gap:6px;height:100%;text-align:center;padding:24px;background:linear-gradient(160deg,#1f2937,#0b0d10)}
+.hero-kosong b{font-size:26px;letter-spacing:-.02em}
+.hero-kosong span{color:#c3c8d0;font-size:14px}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:42%;background:linear-gradient(transparent,rgba(0,0,0,.6));pointer-events:none}
+.hero-kontrol{position:absolute;top:12px;right:12px;z-index:3;display:flex;gap:8px}
+.hero-bawah{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:0 16px 16px;display:grid;gap:12px}
+.hero-cap{font-size:17px;font-weight:600;letter-spacing:-.01em;text-shadow:0 1px 8px rgba(0,0,0,.5);max-width:30ch}
+.hero-nav{display:flex;align-items:center;gap:10px}
+.bars{display:flex;gap:6px}
+.bars button{width:26px;height:4px;padding:0;border:0;border-radius:2px;background:rgba(255,255,255,.4)}
+.bars button[aria-current="true"]{background:#fff}
 
-/* ---------- Bento Grid "Kunjungi toko kami" (7 kotak + banner bawah, gambar murni) ---------- */
-/* HP: 2 kolom x 6 baris. Tinggi dihitung dari lebar lewat aspect-ratio, jadi rasio kotak selalu tetap. */
-.bento{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(6,minmax(0,1fr));aspect-ratio:328/578}
-.bento-item{position:relative;display:block;min-width:0;min-height:0;overflow:hidden;border:1px solid var(--garis);border-radius:var(--r);background:var(--surface-2)}
-.bento-item img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-a.bento-item[href]{transition:transform .2s,box-shadow .2s}
-a.bento-item[href]:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.14)}
-.b-k1{grid-column:1/-1;grid-row:1}
-.b-k2{grid-column:1;grid-row:2}
-.b-k3{grid-column:2;grid-row:2}
-.b-k4{grid-column:1/-1;grid-row:3}
-.b-k5{grid-column:1;grid-row:4/6}
-.b-k6{grid-column:2;grid-row:4}
-.b-k7{grid-column:2;grid-row:5}
-.b-bawah{grid-column:1/-1;grid-row:6}
+/* ---------- Blok & lokasi ---------- */
+.blok{padding:48px 0 0;scroll-margin-top:68px}
+.judul{font-size:22px;font-weight:700;letter-spacing:-.02em;margin-bottom:20px}
+.lokasi-grid{display:grid;gap:20px}
+.tslider{position:relative;overflow:hidden;border:1px solid var(--garis);border-radius:var(--r);background:var(--surface-2);aspect-ratio:16/10;touch-action:pan-y}
+.tslider-track{display:flex;height:100%;transition:transform .45s ease}
+.tslider-track>div{flex:0 0 100%;height:100%}
+.tslider-track img{width:100%;height:100%;object-fit:cover}
+.tslider-prev,.tslider-next{position:absolute;top:50%;transform:translateY(-50%)}
+.tslider-prev{left:10px}.tslider-next{right:10px}
+.tslider-dots{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:6px}
+.tslider-dots button{width:7px;height:7px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.55)}
+.tslider-dots button[aria-current="true"]{background:#fff;width:18px;border-radius:4px}
+.lokasi-info{display:grid;gap:18px;align-content:start}
+.info-baris{display:flex;gap:12px}
+.info-baris .ik{margin-top:3px}
+.info-baris h3{font-size:14px;font-weight:600}
+.info-baris p{color:var(--ink-2);font-size:14px}
+.peta{overflow:hidden;border:1px solid var(--garis);border-radius:var(--r);min-height:240px;background:var(--surface-2)}
+.peta iframe{width:100%;height:100%;min-height:240px;border:0}
 
 /* ---------- Footer ---------- */
 .foot{margin-top:56px;background:var(--footer);border-top:1px solid var(--garis)}
@@ -108,7 +129,7 @@ a.bento-item[href]:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0
 
 /* ---------- Sidebar ---------- */
 .scrim{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45)}
-.sb{position:fixed;top:0;bottom:0;left:0;z-index:70;width:min(320px,86%);display:flex;flex-direction:column;background:var(--bg);border-right:1px solid var(--garis);transform:translateX(-102%);transition:transform .25s ease;visibility:hidden}
+.sb{position:fixed;top:0;bottom:0;left:calc(50% - min(50%, 240px));z-index:70;width:min(320px,86%);display:flex;flex-direction:column;background:var(--bg);border-right:1px solid var(--garis);transform:translateX(-102%);transition:transform .25s ease;visibility:hidden}
 .sb.buka{transform:none;visibility:visible}
 .sb-head{height:60px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 20px;border-bottom:1px solid var(--garis)}
 .sb-nama{font-weight:600}
@@ -128,6 +149,7 @@ a.sb-item:hover{background:var(--surface-2)}
 
 /* ---------- Halaman Toko ---------- */
 .store{position:fixed;inset:0;z-index:50;background:var(--bg);overflow-y:auto;overscroll-behavior:contain}
+html[data-device="hp"] .store{inset:0 auto 0 calc(50% - min(50%, 240px));width:min(100%,var(--kolom))}
 .store-top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--garis)}
 .store-bar{max-width:1600px;margin:0 auto;height:56px;padding:0 8px;display:flex;align-items:center;justify-content:space-between}
 .store-bar h2{position:absolute;left:50%;transform:translateX(-50%);font-size:16px;font-weight:600}
@@ -170,9 +192,10 @@ html[data-tema="gelap"] .lencana .promo{color:#111827}
 .cartbar small{opacity:.8;font-size:13px}
 .cb-aksi{display:flex;align-items:center;gap:4px;font-size:14px;font-weight:600}
 .cb-aksi svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2}
+html[data-device="hp"] .cartbar{left:calc(50% - min(50%,240px) + 12px);transform:none;width:min(calc(100% - 24px),calc(var(--kolom) - 24px))}
 
 /* ---------- Dialog ---------- */
-.dlg{padding:0;border:0;background:var(--surface);color:var(--ink);border-radius:18px;width:calc(100% - 24px);max-width:560px;max-height:calc(100svh - 32px);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.dlg{padding:0;border:0;background:var(--surface);color:var(--ink);border-radius:18px;width:calc(100% - 24px);max-width:560px;max-height:calc(var(--vh100,100svh) - 32px);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
 .dlg[open]{display:flex;flex-direction:column}
 .dlg::backdrop{background:rgba(0,0,0,.5)}
 .dlg-lebar{max-width:960px}
@@ -181,6 +204,7 @@ html[data-tema="gelap"] .lencana .promo{color:#111827}
 .dlg-body{flex:1;overflow-y:auto;padding:20px}
 .dlg-foot{flex:none;padding:14px 20px;border-top:1px solid var(--garis);display:grid;gap:10px;background:var(--surface)}
 .dlg-foot-2{grid-template-columns:1fr 1fr}
+html[data-device="hp"] .dlg{margin:auto auto 0;width:min(100%,var(--kolom));max-width:var(--kolom);border-radius:18px 18px 0 0;max-height:calc(var(--vh100,100svh) - 24px)}
 
 .detail-grid{display:grid;gap:18px}
 .detail-foto{aspect-ratio:4/3;overflow:hidden;border-radius:12px;background:var(--surface-2)}
@@ -222,8 +246,7 @@ html[data-tema="gelap"] .lencana .promo{color:#111827}
 .chip{padding:7px 12px;border:1px solid var(--garis);border-radius:999px;background:var(--surface);font-size:13px;color:var(--ink-2)}
 .chip:hover{border-color:var(--ink);color:var(--ink)}
 .cari-hasil{margin-top:18px;display:grid;gap:10px}
-.cari-ring{font-size:14px;color:var(--ink-2);white-space:pre-line;overflow-wrap:anywhere}
-.cari-ring a{font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.cari-ring{font-size:14px;color:var(--ink-2)}
 .cari-kartu{display:grid;grid-template-columns:76px 1fr;gap:12px;padding:12px;border:1px solid var(--garis);border-radius:12px}
 .cari-kartu .kr-foto{width:76px;height:76px}
 .cari-alasan{margin-top:3px;font-size:13px;color:var(--ink-2)}
@@ -238,100 +261,34 @@ html[data-tema="gelap"] .lencana .promo{color:#111827}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
 /* =====================================================================
-   RESPONSIF MURNI (CSS Media Query)
-   HP     : max-width 767px
-   Laptop : min-width 768px
+   LAPTOP / PC  (hanya html[data-device="desktop"], layar >= 900px)
    ===================================================================== */
-@media (max-width:767px){
-  /* dialog menjadi lembar bawah selebar layar */
-  .dlg,.dlg-lebar{margin:auto auto 0;width:100%;max-width:100%;border-radius:18px 18px 0 0;max-height:calc(100svh - 24px)}
-}
-
-@media (min-width:768px){
-  /* Header: logo paling kiri, menu utama di tengah, ikon di kanan; hamburger disembunyikan */
-  .hdr-in{display:grid;grid-template-columns:1fr auto 1fr;height:68px;padding:0 24px}
-  #btnMenu{display:none!important}
-  .brand{position:static;transform:none;max-width:none;justify-self:start;font-size:15px}
-  .nav-utama{display:flex;align-items:center;justify-content:center;gap:12px}
-  .nav-utama a{font-size:13px}
-  .hdr-kanan{justify-self:end}
-  .sb,.scrim{display:none!important}
-
-  /* Area tengah */
-  .blok{padding-top:64px}
-  .judul{font-size:28px;margin-bottom:28px}
-  .bento{gap:12px;grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:repeat(10,minmax(0,1fr));aspect-ratio:1200/1308}
-  .b-k1{grid-column:1/7;grid-row:1/3}
-  .b-k2{grid-column:1/4;grid-row:3/5}
-  .b-k3{grid-column:4/7;grid-row:3/5}
-  .b-k4{grid-column:1/5;grid-row:5/7}
-  .b-k5{grid-column:5/7;grid-row:5/9}
-  .b-k6{grid-column:1/3;grid-row:7/9}
-  .b-k7{grid-column:3/5;grid-row:7/9}
-  .b-bawah{grid-column:1/7;grid-row:9/11}
-
-  /* Katalog, dialog, footer (nilai footer sama seperti sebelumnya) */
-  .store-filter{grid-template-columns:280px 1fr;padding:0 32px 14px}
-  .grid{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px}
-  .kartu{padding:10px}
-  .kartu h3{font-size:15px}
-  .kartu-aksi{grid-template-columns:1fr 1fr}
-  .detail-grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:36px}
-  .dlg-body{padding:28px}
-  .dlg-side{margin:0 0 0 auto;width:420px;max-width:100%;height:100%;max-height:100%;border-radius:0}
-  .dlg-cari{margin-top:10vh}
-  .foot-grid{grid-template-columns:1fr 1fr}
-}
-
 @media (min-width:900px){
-  .brand{font-size:17px}
-  .brand img{width:32px;height:32px}
-  .nav-utama{gap:clamp(20px,2.4vw,32px)}
-  .nav-utama a{font-size:14px}
-  .wadah{padding:0 32px}
-  .foot-grid{grid-template-columns:1.5fr 1fr 1.5fr 1fr;gap:40px;padding:56px 0 36px}
+  html[data-device="desktop"] .wadah{padding:0 32px}
+  html[data-device="desktop"] .hdr-in{height:68px;padding:0 24px}
+  html[data-device="desktop"] .brand{font-size:17px}
+  html[data-device="desktop"] .brand img{width:32px;height:32px}
+  html[data-device="desktop"] .hero{aspect-ratio:16/9;max-height:calc(var(--vh100,100svh) - 68px);min-height:380px}
+  html[data-device="desktop"] .hero-bawah{padding:0 clamp(24px,5vw,72px) 28px;gap:16px}
+  html[data-device="desktop"] .hero-cap{font-size:clamp(26px,3.2vw,44px);line-height:1.15;max-width:22ch}
+  html[data-device="desktop"] .hero-kontrol{top:20px;right:clamp(20px,3vw,48px)}
+  html[data-device="desktop"] .blok{padding-top:72px}
+  html[data-device="desktop"] .judul{font-size:28px;margin-bottom:28px}
+  html[data-device="desktop"] .lokasi-grid{grid-template-columns:1.1fr 1fr;gap:32px;align-items:start}
+  html[data-device="desktop"] .tslider{aspect-ratio:4/3}
+  html[data-device="desktop"] .foot-grid{grid-template-columns:1.5fr 1fr 1.5fr 1fr;gap:40px;padding:56px 0 36px}
+  html[data-device="desktop"] .store-filter{grid-template-columns:280px 1fr;padding:0 32px 14px}
+  html[data-device="desktop"] .grid{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px}
+  html[data-device="desktop"] .kartu{padding:10px}
+  html[data-device="desktop"] .kartu h3{font-size:15px}
+  html[data-device="desktop"] .kartu-aksi{grid-template-columns:1fr 1fr}
+  html[data-device="desktop"] .detail-grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:36px}
+  html[data-device="desktop"] .dlg-body{padding:28px}
+  html[data-device="desktop"] .sb{left:0;width:340px}
+  html[data-device="desktop"] .dlg-side{margin:0 0 0 auto;width:420px;max-width:100%;height:100%;max-height:100%;border-radius:0}
+  html[data-device="desktop"] .dlg-cari{margin-top:10vh}
 }
-
-/* =====================================================================
-   TAMBAHAN / PERBAIKAN: BENTO GRID + VIDEO RESPONSIF
-   TEMPEL DI PALING BAWAH file CSS. Memakai selector #bento agar menang
-   atas aturan .bento lama tanpa perlu menghapus apa pun.
-   HP     : max-width 767px  -> 1 kolom menumpuk, hanya video-hp.mp4
-   Laptop : min-width 768px  -> 3 kolom, video besar + gambar di sampingnya,
-                                 hanya video-desktop.mp4
-   ===================================================================== */
-
-/* ---------- Dasar (HP, 1 kolom) ---------- */
-#bento{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-auto-rows:auto;gap:12px;aspect-ratio:auto}
-#bento .bento-item{position:relative;display:block;min-width:0;min-height:0;overflow:hidden;border:1px solid var(--garis);border-radius:var(--r);background:var(--surface-2);grid-column:auto;grid-row:auto}
-#bento .bento-item img,
-#bento .bento-item video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-
-/* tinggi tiap kotak di HP ditentukan rasio (karena 1 kolom) */
-#bento .b-video{aspect-ratio:auto;height:min(calc((100vw - 32px) * 16 / 9),80svh)}   /* potret 9:16, tapi maks. 80% tinggi layar */
-#bento .b-k1,#bento .b-bawah,#bento .b-k2,#bento .b-k3,#bento .b-k5{aspect-ratio:5/2}
-#bento .b-k4,#bento .b-k6,#bento .b-k7{aspect-ratio:4/3}
-
-/* ---------- Video: hanya satu yang tampil ---------- */
-#bento .vid-desktop{display:none!important}
-#bento .vid-hp{display:block!important}
-
-/* ---------- Laptop / Desktop (>= 768px) ---------- */
-@media (min-width:768px){
-  #bento .vid-hp{display:none!important}
-  #bento .vid-desktop{display:block!important}
-
-  #bento{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(9,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);aspect-ratio:1200/1356}
-  #bento .bento-item{aspect-ratio:auto;max-height:none}
-  #bento .b-video{height:auto}
-
-  #bento .b-video{grid-column:1/3;grid-row:1/4}   /* video besar: 2 kolom x 3 baris */
-  #bento .b-k2{grid-column:3;grid-row:1}          /* samping video */
-  #bento .b-k3{grid-column:3;grid-row:2}
-  #bento .b-k5{grid-column:3;grid-row:3}
-  #bento .b-k1{grid-column:1/4;grid-row:4/6}      /* banner lebar penuh */
-  #bento .b-k4{grid-column:1;grid-row:6/8}
-  #bento .b-k6{grid-column:2;grid-row:6/8}
-  #bento .b-k7{grid-column:3;grid-row:6/8}
-  #bento .b-bawah{grid-column:1/4;grid-row:8/10}  /* banner bawah lebar penuh */
+@media (min-width:640px) and (max-width:899px){
+  html[data-device="desktop"] .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  html[data-device="desktop"] .foot-grid{grid-template-columns:1fr 1fr}
 }

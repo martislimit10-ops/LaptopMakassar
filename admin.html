@@ -40,21 +40,25 @@
       </div>
     </div>
     <nav class="tabs" role="tablist" aria-label="Bagian yang dikelola">
-      <button role="tab" id="tab-bento"  aria-selected="true"  aria-controls="pnl-bento"  data-tab="bento">Bento Grid</button>
-      <button role="tab" id="tab-info"   aria-selected="false" aria-controls="pnl-info"   data-tab="info" tabindex="-1">Info &amp; Kontak</button>
-      <button role="tab" id="tab-produk" aria-selected="false" aria-controls="pnl-produk" data-tab="produk" tabindex="-1">Produk</button>
+      <button role="tab" id="tab-hero_desktop" aria-selected="true"  aria-controls="pnl-hero_desktop" data-tab="hero_desktop">Hero Desktop</button>
+      <button role="tab" id="tab-hero_hp"      aria-selected="false" aria-controls="pnl-hero_hp"      data-tab="hero_hp" tabindex="-1">Hero HP</button>
+      <button role="tab" id="tab-toko"         aria-selected="false" aria-controls="pnl-toko"         data-tab="toko" tabindex="-1">Slider Toko</button>
+      <button role="tab" id="tab-info"         aria-selected="false" aria-controls="pnl-info"         data-tab="info" tabindex="-1">Info &amp; Kontak</button>
+      <button role="tab" id="tab-produk"       aria-selected="false" aria-controls="pnl-produk"       data-tab="produk" tabindex="-1">Produk</button>
     </nav>
   </header>
 
   <main class="isi">
-    <!-- Bento Grid beranda (diisi oleh admin.js) -->
-    <section id="pnl-bento" role="tabpanel" aria-labelledby="tab-bento"></section>
+    <!-- Tiga tab media memakai komponen yang sama (diisi oleh admin.js) -->
+    <section id="pnl-hero_desktop" role="tabpanel" aria-labelledby="tab-hero_desktop" data-media="hero_desktop"></section>
+    <section id="pnl-hero_hp"      role="tabpanel" aria-labelledby="tab-hero_hp"      data-media="hero_hp" hidden></section>
+    <section id="pnl-toko"         role="tabpanel" aria-labelledby="tab-toko"         data-media="toko" hidden></section>
 
     <!-- Info & Kontak -->
     <section id="pnl-info" role="tabpanel" aria-labelledby="tab-info" hidden>
       <div class="bagian-kepala">
         <div><h2>Informasi &amp; Kontak Toko</h2>
-        <p class="muted">Dipakai di sidebar, footer, tombol Contact, pesan WhatsApp, dan asisten AI.</p></div>
+        <p class="muted">Dipakai di sidebar, footer, bagian lokasi, tombol Contact, dan pesan WhatsApp.</p></div>
       </div>
       <form id="formInfo" class="kartu form-grid">
         <div class="f"><label for="i-wa">Nomor WhatsApp CS</label><input id="i-wa" name="wa" inputmode="numeric" placeholder="6285117822767"><small>Format internasional tanpa + atau spasi, contoh 6285117822767.</small></div>
@@ -65,6 +69,7 @@
         <div class="f"><label for="i-ig">Instagram</label><input id="i-ig" name="instagram" placeholder="laptop_makassar atau link lengkap"></div>
         <div class="f"><label for="i-tt">TikTok</label><input id="i-tt" name="tiktok" placeholder="laptop_makassar atau link lengkap"></div>
         <div class="f f-lebar"><label for="i-maps">Link Google Maps</label><input id="i-maps" name="maps_link" type="url" placeholder="https://maps.app.goo.gl/..."></div>
+        <div class="f f-lebar"><label for="i-peta">Link peta tersemat (embed)</label><input id="i-peta" name="peta_embed_url" type="url" placeholder="https://www.google.com/maps/embed?pb=..."><small>Google Maps &rarr; Bagikan &rarr; Sematkan peta &rarr; salin isi src="..." saja.</small></div>
         <div class="f f-lebar"><label for="i-desk">Deskripsi singkat toko (footer)</label><textarea id="i-desk" name="deskripsi" rows="3"></textarea></div>
         <div class="f-aksi"><button type="submit" class="btn" id="btnSimpanInfo">Simpan</button><span id="pesanInfo" class="pesan" role="status"></span></div>
       </form>

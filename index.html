@@ -11,9 +11,26 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Tema gelap diterapkan sebelum halaman digambar (anti-kedip). Tidak ada deteksi perangkat. -->
+  <!-- Dijalankan sebelum halaman digambar: tema + deteksi HP (anti-kedip) -->
   <script>
-  try { if (localStorage.getItem('lm_tema') === 'gelap') document.documentElement.setAttribute('data-tema', 'gelap'); } catch (e) {}
+  (function () {
+    var d = document.documentElement;
+    try { if (localStorage.getItem('lm_tema') === 'gelap') d.setAttribute('data-tema', 'gelap'); } catch (e) {}
+    /* HP = layar sentuh + sisi terpendek layar fisik <= 600px. Tetap terdeteksi walau "Desktop Site" aktif. */
+    var sentuh = (navigator.maxTouchPoints || 0) > 0 && window.matchMedia('(pointer:coarse)').matches;
+    var hp = sentuh && Math.min(screen.width, screen.height) <= 600;
+    d.setAttribute('data-device', hp ? 'hp' : 'desktop');
+    window.LM_HP = hp;
+    /* Jika HP membuka "Desktop Site", lebar halaman ~980px. Skalakan kolom 480px agar pas layar, tidak melebar. */
+    window.aturSkala = function () {
+      var z = 1;
+      var potret = window.matchMedia('(orientation:portrait)').matches;
+      if (hp && potret && window.innerWidth > 520) z = window.innerWidth / 480;
+      d.style.zoom = z === 1 ? '' : String(z);
+      d.style.setProperty('--vh100', (window.innerHeight / z) + 'px');
+    };
+    window.aturSkala();
+  })();
   </script>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -34,6 +51,10 @@
     <symbol id="i-ig" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4.5"/><circle cx="12" cy="12" r="3.6"/><circle cx="16.8" cy="7.2" r=".7" fill="currentColor"/></symbol>
     <symbol id="i-tiktok" viewBox="0 0 24 24"><path d="M14 4v10.2a3.7 3.7 0 1 1-3.7-3.7"/><path d="M14 4c.4 2.4 2.1 4 4.5 4.2"/></symbol>
     <symbol id="i-wa" viewBox="0 0 24 24"><path d="M4 20l1.2-4.2A8 8 0 1 1 8.3 18.9L4 20z"/><path d="M9.3 8.8c-.3 2 1.3 4.3 3.6 5.2 1 .4 1.8.3 2.3-.5l-1.4-1-.7.6c-.9-.4-1.6-1.1-2-2l.6-.7-1-1.4c-.5.1-1.2 0-1.4-.2z" stroke-width="1.2"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M9 6.5v11M15 6.5v11"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8.5 6v12l9.5-6z" fill="currentColor"/></symbol>
+    <symbol id="i-vol" viewBox="0 0 24 24"><path d="M4 10v4h3.5L12 18V6L7.5 10H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></symbol>
+    <symbol id="i-mute" viewBox="0 0 24 24"><path d="M4 10v4h3.5L12 18V6L7.5 10H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></symbol>
     <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
     <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
     <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M10 7V4.5h4V7M7 7l.8 12h8.4L17 7"/></symbol>
@@ -57,13 +78,6 @@
         <span>Laptop Makassar</span>
       </a>
 
-      <nav class="nav-utama" aria-label="Menu utama">
-        <a href="#">Beranda</a>
-        <a href="#toko">Toko &amp; Katalog</a>
-        <a href="#lokasi">Lokasi &amp; Jam Buka</a>
-        <a data-wa target="_blank" rel="noopener">Contact</a>
-      </nav>
-
       <div class="hdr-kanan">
         <button type="button" id="btnCari" class="ikon" aria-label="Cari laptop dengan AI"><svg><use href="#i-search"/></svg></button>
         <button type="button" id="btnToko" class="ikon" aria-label="Buka toko dan keranjang">
@@ -76,36 +90,58 @@
 
   <main id="konten">
 
-    <!-- ============ KUNJUNGI TOKO KAMI (BENTO GRID) ============ -->
-    <section id="lokasi" class="blok" aria-labelledby="judulToko">
-      <div class="wadah">
-        <h2 class="judul" id="judulToko">Kunjungi toko kami</h2>
-        <div id="bento" class="bento">
-          <div class="bento-item b-video">
-            <video class="vid-hp" autoplay muted loop playsinline preload="metadata" aria-label="Video Laptop Makassar">
-              <source src="assets/video-hp.mp4" type="video/mp4">
-            </video>
-            <video class="vid-desktop" autoplay muted loop playsinline preload="metadata" aria-label="Video Laptop Makassar">
-              <source src="assets/video-desktop.mp4" type="video/mp4">
-            </video>
-          </div>
-          <a class="bento-item b-k1" data-slot="k1"></a>
-          <a class="bento-item b-k2" data-slot="k2"></a>
-          <a class="bento-item b-k3" data-slot="k3"></a>
-          <a class="bento-item b-k4" data-slot="k4"></a>
-          <a class="bento-item b-k5" data-slot="k5"></a>
-          <a class="bento-item b-k6" data-slot="k6"></a>
-          <a class="bento-item b-k7" data-slot="k7"></a>
-          <a class="bento-item b-bawah" data-slot="bawah"></a>
+    <!-- ============ HERO SLIDER (foto + video) ============ -->
+    <section id="hero" class="hero" aria-roledescription="carousel" aria-label="Promo Laptop Makassar">
+      <div id="heroTrack" class="hero-track"></div>
+
+      <div id="heroKontrol" class="hero-kontrol" hidden>
+        <button type="button" id="heroJeda" class="bulat" aria-label="Jeda video"><svg><use href="#i-pause"/></svg></button>
+        <button type="button" id="heroSuara" class="bulat" aria-label="Nyalakan suara"><svg><use href="#i-mute"/></svg></button>
+      </div>
+
+      <div class="hero-bawah">
+        <p id="heroCap" class="hero-cap"></p>
+        <div id="heroNav" class="hero-nav" hidden>
+          <button type="button" id="heroPrev" class="bulat" aria-label="Slide sebelumnya"><svg><use href="#i-chev-l"/></svg></button>
+          <div id="heroBars" class="bars"></div>
+          <button type="button" id="heroNext" class="bulat" aria-label="Slide berikutnya"><svg><use href="#i-chev-r"/></svg></button>
         </div>
       </div>
     </section>
 
-    <!-- ============ REST SELLER ============ -->
-    <section id="restSeller" class="blok" aria-labelledby="judulRest">
+    <!-- ============ KUNJUNGI TOKO KAMI ============ -->
+    <section id="lokasi" class="blok">
       <div class="wadah">
-        <h2 class="judul" id="judulRest">Rest Seller</h2>
-        <div id="restGrid" class="grid"></div>
+        <h2 class="judul">Kunjungi toko kami</h2>
+        <div class="lokasi-grid">
+          <div id="tokoSlider" class="tslider" aria-roledescription="carousel" aria-label="Foto toko">
+            <div class="tslider-track" id="tokoTrack"></div>
+            <button type="button" class="bulat tslider-prev" aria-label="Foto sebelumnya" hidden><svg><use href="#i-chev-l"/></svg></button>
+            <button type="button" class="bulat tslider-next" aria-label="Foto berikutnya" hidden><svg><use href="#i-chev-r"/></svg></button>
+            <div class="tslider-dots" id="tokoDots"></div>
+          </div>
+
+          <div class="lokasi-info">
+            <div class="info-baris">
+              <svg class="ik"><use href="#i-pin"/></svg>
+              <div>
+                <h3>Alamat</h3>
+                <p data-fill="alamat"></p>
+                <a data-maps target="_blank" rel="noopener" class="tautan">Buka di Google Maps</a>
+              </div>
+            </div>
+            <div class="info-baris">
+              <svg class="ik"><use href="#i-clock"/></svg>
+              <div>
+                <h3>Jam operasional</h3>
+                <p data-fill="jam"></p>
+              </div>
+            </div>
+            <div class="peta">
+              <iframe id="peta" title="Lokasi Laptop Makassar di Google Maps" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   </main>
