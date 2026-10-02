@@ -1,14 +1,5 @@
-/* =====================================================================
-   LAPTOP MAKASSAR - KONFIGURASI BERSAMA (dipakai index.html & admin.html)
-   Muat SETELAH library supabase-js dan SEBELUM script.js / admin.js.
-
-   >>> ISI 2 NILAI DI BAWAH dari Supabase > Project Settings > API <<<
-   - SUPABASE_URL      : "Project URL"
-   - SUPABASE_ANON_KEY : kunci "anon public" (AMAN dipublikasikan).
-   JANGAN PERNAH menaruh "service_role" atau kunci Gemini di file ini.
-   ===================================================================== */
-const SUPABASE_URL      = 'https://GANTI-DENGAN-PROJECT-ID.supabase.co';
-const SUPABASE_ANON_KEY = 'GANTI-DENGAN-ANON-PUBLIC-KEY';
+const SUPABASE_URL      = 'https://yoafuzhmyhchochqkrpu.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvYWZ1emhteWhjaG9jaHFrcnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NjI5MjQsImV4cCI6MjEwNjIzODkyNH0.-oT62ybhKl04uBMIgc2EFD4p_bvdsC3aUB7sp0KWboc';
 
 const BUCKET = 'media'; // bucket Storage publik untuk semua foto & video
 
@@ -50,8 +41,7 @@ const KONDISI = {
 };
 
 /* Pembantu umum */
-const $  = (s, r = document) => r.querySelector(s);
-const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const $  = (s, r = document) => r.querySelector(s); const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const rupiah = n => 'Rp ' + new Intl.NumberFormat('id-ID').format(Number(n) || 0);
 const namaLengkap = p => `${p.merek || ''} ${p.seri || ''}`.trim();
