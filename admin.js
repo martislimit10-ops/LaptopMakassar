@@ -1,389 +1,343 @@
 /* =====================================================================
    LAPTOP MAKASSAR - PANEL ADMIN
-   Login: Supabase Auth. Data: tabel produk, config, video.
-   File: Supabase Storage (bucket publik "media").
+   Butuh: supabase-js -> supabase-config.js -> admin.js
+   Tab: Hero Desktop, Hero HP, Slider Toko, Info & Kontak, Produk.
+   Sekali klik "Simpan" -> data masuk Supabase -> halaman depan
+   terbarui otomatis (realtime), tanpa mengubah file di GitHub.
    ===================================================================== */
-const $ = (s, r = document) => r.querySelector(s);
-const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const rupiah = n => 'Rp ' + new Intl.NumberFormat('id-ID').format(n);
 
-const KATEGORI = [
-  { id: 'gaming', label: 'Laptop Gaming' },
-  { id: 'macbook', label: 'MacBook' },
-  { id: 'vivobook', label: 'Asus Vivobook' },
-  { id: 'celeron', label: 'Celeron / Daily' },
-  { id: 'lenovo', label: 'Lenovo' },
-  { id: 'hpdell', label: 'HP & Dell' }
-];
-const LABEL_TAG = { promo: 'Promo', baru: 'Baru masuk', terlaris: 'Terlaris' };
-const MAKS_VIDEO = 50 * 1024 * 1024;
+const BATAS_MB = 50;            // batas file Supabase Storage (paket gratis)
+let sudahMuat = false;
 
-let daftar = [];          // produk dari database
-let configRow = null;     // baris tabel config
-let videoRow = null;      // baris tabel video
-let sedangEditId = null;  // null = tambah baru
-let fotoLamaEdit = '';    // URL foto produk sebelum diedit
-
-/* ---------- Util ---------- */
-function toast(pesan) {
-  const t = $('#toast');
-  t.querySelector('p').textContent = pesan;
-  t.classList.remove('hidden'); t.classList.add('flex');
-  clearTimeout(toast._t);
-  toast._t = setTimeout(() => { t.classList.add('hidden'); t.classList.remove('flex'); }, 3200);
+/* ---------- Pembantu ---------- */
+let timerToast;
+function toast(teks) {
+  const t = $('#toast'); t.textContent = teks; t.classList.add('tampil');
+  clearTimeout(timerToast); timerToast = setTimeout(() => t.classList.remove('tampil'), 2600);
 }
-function tampilError(el, pesan) {
-  el.textContent = pesan;
-  el.classList.toggle('hidden', !pesan);
+const pesanGalat = e => (e && (e.message || e.error_description)) || 'Terjadi kesalahan';
+function setPesan(el, teks, galat = false) {
+  el.textContent = teks || ''; el.classList.toggle('galat', !!galat); if (el.hasAttribute('hidden') || el.id.startsWith('pesanProduk')) el.hidden = !teks;
 }
-function pesanError(err) {
-  const m = (err && err.message) || String(err);
-  if (/row-level security|permission|JWT|not authorized|Unauthorized/i.test(m)) return 'Sesi admin tidak valid atau sudah habis. Keluar lalu masuk lagi.';
-  if (/Failed to fetch|NetworkError|network/i.test(m)) return 'Koneksi internet bermasalah. Coba lagi.';
-  return m;
+const penanda = `/storage/v1/object/public/${BUCKET}/`;
+function pathStorage(url) {
+  const i = String(url || '').indexOf(penanda);
+  return i < 0 ? null : decodeURIComponent(url.slice(i + penanda.length).split('?')[0]);
 }
-function sibuk(btn, aktif, teks) {
-  if (aktif) { btn.dataset.teks = btn.textContent; btn.textContent = teks; btn.disabled = true; }
-  else { btn.textContent = btn.dataset.teks || btn.textContent; btn.disabled = false; }
+async function hapusFileStorage(url) {
+  const p = pathStorage(url);
+  if (p) { try { await sb.storage.from(BUCKET).remove([p]); } catch (e) { console.warn('Gagal hapus file lama:', e); } }
 }
-
-/* ---------- Storage ---------- */
-const pathDariUrl = url => {
-  const bagian = String(url || '').split(`/object/public/${STORAGE_BUCKET}/`);
-  return bagian.length === 2 ? decodeURIComponent(bagian[1].split('?')[0]) : null;
-};
-async function hapusFile(url) {
-  const path = pathDariUrl(url);
-  if (path) { try { await sb.storage.from(STORAGE_BUCKET).remove([path]); } catch (e) { /* abaikan */ } }
-}
-async function unggah(blob, folder, ext, type) {
-  const nama = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  const { error } = await sb.storage.from(STORAGE_BUCKET).upload(nama, blob, { contentType: type, cacheControl: '31536000', upsert: false });
-  if (error) throw error;
-  return sb.storage.from(STORAGE_BUCKET).getPublicUrl(nama).data.publicUrl;
-}
-async function kompresGambar(file, maks = 1400, kualitas = 0.85) {
-  try {
-    const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
-    const skala = Math.min(1, maks / Math.max(bmp.width, bmp.height));
-    const c = document.createElement('canvas');
-    c.width = Math.round(bmp.width * skala);
-    c.height = Math.round(bmp.height * skala);
-    const ctx = c.getContext('2d');
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, c.width, c.height);
-    ctx.drawImage(bmp, 0, 0, c.width, c.height);
-    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', kualitas));
-    if (blob) return { blob, ext: 'jpg', type: 'image/jpeg' };
-  } catch (e) { /* pakai file asli */ }
-  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-  return { blob: file, ext, type: file.type || 'image/jpeg' };
-}
-async function unggahGambar(file, folder) {
-  const { blob, ext, type } = await kompresGambar(file);
-  return unggah(blob, folder, ext, type);
-}
-function pratinjau(inputFile, imgEl) {
-  inputFile.addEventListener('change', () => {
-    const f = inputFile.files && inputFile.files[0];
-    if (f) { imgEl.src = URL.createObjectURL(f); imgEl.classList.remove('hidden'); }
+function kompres(file, maks = 1920, kualitas = 0.85) {
+  return new Promise((ok, gagal) => {
+    const img = new Image(), u = URL.createObjectURL(file);
+    img.onload = () => {
+      const s = Math.min(1, maks / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob(b => { URL.revokeObjectURL(u); b ? ok(b) : gagal(new Error('Gagal memproses gambar')); }, 'image/jpeg', kualitas);
+    };
+    img.onerror = () => { URL.revokeObjectURL(u); gagal(new Error('Gambar tidak bisa dibaca')); };
+    img.src = u;
   });
 }
-
-/* =====================================================================
-   LOGIN / SESI
-   ===================================================================== */
-function tampilkanView(session) {
-  const masuk = !!session;
-  $('#viewLogin').classList.toggle('hidden', masuk);
-  $('#viewPanel').classList.toggle('hidden', !masuk);
-  $('#btnKeluar').classList.toggle('hidden', !masuk);
-  if (masuk) setTimeout(muatSemua, 0);
+async function unggah(file, folder) {
+  let blob = file, ext = (file.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
+  if (file.type.startsWith('image/') && !/gif|svg/.test(file.type)) { blob = await kompres(file); ext = 'jpg'; }
+  if (blob.size > BATAS_MB * 1024 * 1024) throw new Error(`"${file.name}" lebih dari ${BATAS_MB} MB`);
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const { error } = await sb.storage.from(BUCKET).upload(path, blob, { cacheControl: '31536000', upsert: false, contentType: blob.type || file.type });
+  if (error) throw error;
+  return sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
 }
 
+/* ---------- Login / sesi ---------- */
+function tampilkan(session) {
+  const masuk = !!session;
+  $('#viewLogin').hidden = masuk; $('#viewPanel').hidden = !masuk;
+  if (masuk && !sudahMuat) { sudahMuat = true; muatSemuaTab(); }
+  if (!masuk) sudahMuat = false;
+}
 $('#formLogin').addEventListener('submit', async e => {
   e.preventDefault();
-  const err = $('#loginError'); tampilError(err, '');
-  const btn = $('#btnMasuk'); sibuk(btn, true, 'Memeriksa...');
-  const { error } = await sb.auth.signInWithPassword({
-    email: $('#loginEmail').value.trim(),
-    password: $('#loginPass').value
-  });
-  sibuk(btn, false);
-  if (error) {
-    tampilError(err, /invalid/i.test(error.message) ? 'Email atau password salah.' : pesanError(error));
-    return;
-  }
-  $('#loginPass').value = '';
+  const b = $('#btnMasuk'), p = $('#loginPesan'); b.disabled = true; p.hidden = true;
+  const { error } = await sb.auth.signInWithPassword({ email: $('#email').value.trim(), password: $('#sandi').value });
+  b.disabled = false;
+  if (error) { p.textContent = 'Email atau kata sandi salah.'; p.hidden = false; }
+  else $('#sandi').value = '';
 });
-
-$('#btnKeluar').addEventListener('click', async () => { await sb.auth.signOut(); });
-
-sb.auth.getSession().then(({ data }) => tampilkanView(data.session));
-sb.auth.onAuthStateChange((_event, session) => tampilkanView(session));
+$('#btnKeluar').addEventListener('click', () => sb.auth.signOut());
 
 /* ---------- Tab ---------- */
-$$('.tab').forEach(t => t.addEventListener('click', () => {
-  $$('.tab').forEach(x => x.setAttribute('aria-selected', String(x === t)));
-  $('#tabProduk').classList.toggle('hidden', t.dataset.tab !== 'produk');
-  $('#tabToko').classList.toggle('hidden', t.dataset.tab !== 'toko');
-  $('#tabVideo').classList.toggle('hidden', t.dataset.tab !== 'video');
-}));
+const tabs = $$('[role="tab"]');
+function pilihTab(nama, fokus = false) {
+  tabs.forEach(t => {
+    const aktif = t.dataset.tab === nama;
+    t.setAttribute('aria-selected', String(aktif)); t.tabIndex = aktif ? 0 : -1;
+    $('#' + t.getAttribute('aria-controls')).hidden = !aktif;
+    if (aktif && fokus) t.focus();
+  });
+  try { history.replaceState(null, '', '#' + nama); } catch (e) {}
+}
+tabs.forEach((t, i) => {
+  t.addEventListener('click', () => pilihTab(t.dataset.tab));
+  t.addEventListener('keydown', e => {
+    const k = { ArrowRight: 1, ArrowLeft: -1 }[e.key]; if (!k) return;
+    e.preventDefault(); pilihTab(tabs[(i + k + tabs.length) % tabs.length].dataset.tab, true);
+  });
+});
 
 /* =====================================================================
-   MUAT DATA
+   MANAJER MEDIA (dipakai 3 tab: hero_desktop, hero_hp, toko)
+   Perubahan ditampung dulu, baru dikirim saat klik "Simpan".
    ===================================================================== */
-async function muatSemua() {
-  await Promise.all([muatProduk(), muatConfig(), muatVideo()]);
+const KONFIG_MEDIA = {
+  hero_desktop: { judul: 'Media Hero Desktop', maks: 8, video: true, rasio: '',
+    info: 'Tampil di laptop/PC. Gunakan foto/video LANDSCAPE 16:9 (contoh 1920×1080).' },
+  hero_hp: { judul: 'Media Hero HP', maks: 8, video: true, rasio: 'r-hp',
+    info: 'Tampil di HP. Gunakan foto/video POTRET 9:16 (contoh 1080×1920).' },
+  toko: { judul: 'Slider "Kunjungi Toko Kami"', maks: 5, video: false, rasio: '',
+    info: 'Khusus foto, maksimal 5. Rasio 16:10 disarankan (contoh 1600×1000).' }
+};
+
+function buatManajerMedia(root, bagian) {
+  const cfg = KONFIG_MEDIA[bagian];
+  let items = [];
+  let sibuk = false;
+
+  root.innerHTML = `
+    <div class="bagian-kepala"><div><h2>${esc(cfg.judul)}</h2><p class="muted" data-hitung></p></div></div>
+    <p class="aturan">${esc(cfg.info)} Urutan slide mengikuti urutan daftar di bawah.${cfg.video ? ' Video maksimal ' + BATAS_MB + ' MB (disarankan MP4/H.264 di bawah 15 MB agar cepat dimuat).' : ''}</p>
+    <div class="daftar" data-daftar></div>
+    <div class="unggah">
+      <label for="u-${bagian}">Tambah ${cfg.video ? 'foto atau video' : 'foto'}</label>
+      <input id="u-${bagian}" type="file" multiple accept="${cfg.video ? 'image/*,video/mp4,video/webm,video/quicktime' : 'image/*'}">
+      <small>File baru baru dikirim setelah kamu menekan Simpan.</small>
+    </div>
+    <div class="bar-simpan"><button type="button" class="btn" data-simpan>Simpan</button><span class="pesan" data-pesan role="status"></span></div>`;
+  const elDaftar = $('[data-daftar]', root), elHitung = $('[data-hitung]', root), elPesan = $('[data-pesan]', root), btnSimpan = $('[data-simpan]', root), inputFile = $('input[type=file]', root);
+
+  const aktifJumlah = () => items.filter(x => !x.hapus).length;
+
+  function gambar() {
+    elHitung.textContent = `${aktifJumlah()} dari maksimal ${cfg.maks} slide`;
+    if (!items.length) { elDaftar.innerHTML = '<div class="kosong">Belum ada media. Tambahkan lewat kotak di bawah.</div>'; return; }
+    elDaftar.innerHTML = items.map((x, i) => `
+      <div class="media ${x.file ? 'baru' : ''} ${x.hapus ? 'hapus' : ''}" data-k="${i}">
+        <div class="thumb ${cfg.rasio}">${x.jenis === 'video' ? `<video src="${esc(x.url)}" muted preload="metadata"></video>` : `<img src="${esc(x.url)}" alt="" onerror="this.onerror=null;this.src=window.FOTO_KOSONG">`}</div>
+        <div class="media-form">
+          <div class="media-baris">
+            <span class="tag">${x.jenis === 'video' ? 'Video' : 'Foto'}</span>
+            ${x.file ? '<span class="tag tag-baru">Baru, belum disimpan</span>' : ''}
+            ${x.hapus ? '<span class="tag tag-baru">Akan dihapus</span>' : ''}
+            <span class="muted grow">${esc(x.file ? x.file.name : '')}</span>
+          </div>
+          <div class="media-baris">
+            <input class="grow" data-f="judul" maxlength="120" placeholder="Teks keterangan (opsional)" value="${esc(x.judul)}" aria-label="Teks keterangan">
+            <label class="sw"><input type="checkbox" data-f="aktif" ${x.aktif ? 'checked' : ''}> Tampilkan</label>
+          </div>
+          <div class="media-baris">
+            <button type="button" class="btn btn-garis btn-kecil" data-aksi="naik" ${i === 0 ? 'disabled' : ''} aria-label="Naikkan">&uarr; Naik</button>
+            <button type="button" class="btn btn-garis btn-kecil" data-aksi="turun" ${i === items.length - 1 ? 'disabled' : ''} aria-label="Turunkan">&darr; Turun</button>
+            <button type="button" class="btn btn-bahaya btn-kecil" data-aksi="hapus">${x.hapus ? 'Batalkan hapus' : 'Hapus'}</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  elDaftar.addEventListener('input', e => {
+    const k = e.target.closest('[data-k]'); const f = e.target.dataset.f; if (!k || !f) return;
+    const it = items[+k.dataset.k];
+    it[f] = f === 'aktif' ? e.target.checked : e.target.value;
+  });
+  elDaftar.addEventListener('click', e => {
+    const b = e.target.closest('[data-aksi]'), k = e.target.closest('[data-k]'); if (!b || !k) return;
+    const i = +k.dataset.k, it = items[i];
+    if (b.dataset.aksi === 'naik' && i > 0) [items[i - 1], items[i]] = [items[i], items[i - 1]];
+    else if (b.dataset.aksi === 'turun' && i < items.length - 1) [items[i + 1], items[i]] = [items[i], items[i + 1]];
+    else if (b.dataset.aksi === 'hapus') {
+      if (it.file) { URL.revokeObjectURL(it.url); items.splice(i, 1); }   // belum tersimpan: langsung buang
+      else {
+        if (it.hapus) { it.hapus = false; if (aktifJumlah() > cfg.maks) { it.hapus = true; return toast(`Maksimal ${cfg.maks} slide`); } }
+        else it.hapus = true;
+      }
+    }
+    gambar();
+  });
+
+  inputFile.addEventListener('change', () => {
+    setPesan(elPesan, '');
+    for (const f of inputFile.files) {
+      const video = f.type.startsWith('video/'), foto = f.type.startsWith('image/');
+      if (!foto && !(video && cfg.video)) { toast(`"${f.name}" dilewati: jenis file tidak didukung`); continue; }
+      if (aktifJumlah() >= cfg.maks) { toast(`Maksimal ${cfg.maks} slide. Hapus salah satu dulu.`); break; }
+      if (f.size > BATAS_MB * 1024 * 1024) { toast(`"${f.name}" lebih dari ${BATAS_MB} MB`); continue; }
+      items.push({ id: null, file: f, jenis: video ? 'video' : 'foto', url: URL.createObjectURL(f), judul: '', aktif: true, hapus: false });
+    }
+    inputFile.value = ''; gambar();
+  });
+
+  async function muat() {
+    const { data, error } = await sb.from('banner').select('*').eq('bagian', bagian).order('urutan', { ascending: true }).order('id', { ascending: true });
+    if (error) { elDaftar.innerHTML = `<div class="kosong">Gagal memuat: ${esc(pesanGalat(error))}. Pastikan schema.sql sudah dijalankan.</div>`; return; }
+    items = (data || []).map(b => ({ id: b.id, file: null, jenis: b.jenis, url: b.url, judul: b.judul || '', aktif: b.aktif, hapus: false }));
+    gambar();
+  }
+
+  btnSimpan.addEventListener('click', async () => {
+    if (sibuk) return;
+    if (aktifJumlah() > cfg.maks) return setPesan(elPesan, `Maksimal ${cfg.maks} slide.`, true);
+    sibuk = true; btnSimpan.disabled = true; setPesan(elPesan, 'Menyimpan...');
+    try {
+      /* 1) hapus  2) ubah yang lama  3) unggah + tambah yang baru (urutan ini menjaga batas 5 foto toko) */
+      for (const x of items.filter(x => x.hapus && x.id)) {
+        const { error } = await sb.from('banner').delete().eq('id', x.id); if (error) throw error;
+        await hapusFileStorage(x.url);
+      }
+      const sisa = items.filter(x => !x.hapus);
+      for (const [i, x] of sisa.entries()) {
+        if (x.id) {
+          const { error } = await sb.from('banner').update({ judul: x.judul.trim() || null, urutan: i + 1, aktif: x.aktif }).eq('id', x.id);
+          if (error) throw error;
+        }
+      }
+      for (const [i, x] of sisa.entries()) {
+        if (!x.file) continue;
+        setPesan(elPesan, `Mengunggah ${x.file.name}...`);
+        const url = await unggah(x.file, bagian);
+        const { error } = await sb.from('banner').insert({ bagian, jenis: x.jenis, url, judul: x.judul.trim() || null, urutan: i + 1, aktif: x.aktif });
+        if (error) { await hapusFileStorage(url); throw error; }
+      }
+      await muat();
+      setPesan(elPesan, 'Tersimpan. Tampilan website terbarui otomatis.'); toast('Tersimpan');
+    } catch (e) {
+      console.error(e); setPesan(elPesan, 'Gagal menyimpan: ' + pesanGalat(e), true);
+      await muat();
+    } finally { sibuk = false; btnSimpan.disabled = false; }
+  });
+
+  return { muat };
 }
+
+/* =====================================================================
+   INFO & KONTAK TOKO (tabel config, satu baris)
+   ===================================================================== */
+const formInfo = $('#formInfo');
+let idConfig = null;
+async function muatInfo() {
+  const { data, error } = await sb.from('config').select('*').order('id', { ascending: true }).limit(1);
+  if (error) { setPesan($('#pesanInfo'), 'Gagal memuat: ' + pesanGalat(error), true); return; }
+  const c = (data && data[0]) || null; idConfig = c ? c.id : null;
+  [...formInfo.elements].forEach(el => {
+    if (!el.name) return;
+    el.value = (c && c[el.name]) ?? CONFIG_AWAL[el.name] ?? '';
+  });
+}
+formInfo.addEventListener('submit', async e => {
+  e.preventDefault();
+  const b = $('#btnSimpanInfo'), p = $('#pesanInfo'); b.disabled = true; setPesan(p, 'Menyimpan...');
+  const isi = {};
+  [...formInfo.elements].forEach(el => { if (el.name) isi[el.name] = el.value.trim(); });
+  isi.wa = isi.wa.replace(/\D/g, '').replace(/^0/, '62');
+  isi.instagram = isi.instagram.replace(/^@/, ''); isi.tiktok = isi.tiktok.replace(/^@/, '');
+  if (!isi.wa) { b.disabled = false; return setPesan(p, 'Nomor WhatsApp wajib diisi.', true); }
+  const q = idConfig ? sb.from('config').update(isi).eq('id', idConfig) : sb.from('config').insert(isi);
+  const { error } = await q;
+  b.disabled = false;
+  if (error) { setPesan(p, 'Gagal menyimpan: ' + pesanGalat(error), true); return; }
+  setPesan(p, 'Tersimpan. Sidebar, footer, dan tombol Contact terbarui otomatis.'); toast('Tersimpan');
+  if (!idConfig) muatInfo();
+});
 
 /* =====================================================================
    PRODUK
    ===================================================================== */
-$('#pKategori').innerHTML = KATEGORI.map(k => `<option value="${k.id}">${k.label}</option>`).join('');
+let produkList = [];
+const dlgProduk = $('#dlgProduk'), formProduk = $('#formProduk');
+let editId = null, fotoLama = '';
+$('#p-kategori').innerHTML = KATEGORI.map(k => `<option value="${k.id}">${esc(k.label)}</option>`).join('');
+$('#p-tags').innerHTML = Object.entries(LABEL_TAG).map(([id, t]) => `<label><input type="checkbox" value="${id}"> ${esc(t)}</label>`).join('');
+dlgProduk.addEventListener('click', e => { if (e.target === dlgProduk) dlgProduk.close(); });
+$$('[data-tutup]', dlgProduk).forEach(b => b.addEventListener('click', () => dlgProduk.close()));
 
 async function muatProduk() {
-  const { data, error } = await sb.from('produk').select('*').order('id', { ascending: true });
-  if (error) { toast(pesanError(error)); return; }
-  daftar = data || [];
-  renderProduk();
+  let r = await sb.from('produk').select('*').order('created_at', { ascending: false });
+  if (r.error) r = await sb.from('produk').select('*').order('id', { ascending: false });
+  const el = $('#daftarProduk');
+  if (r.error) { el.innerHTML = `<div class="kosong">Gagal memuat produk: ${esc(pesanGalat(r.error))}</div>`; return; }
+  produkList = r.data || [];
+  el.innerHTML = produkList.length ? produkList.map(p => {
+    const tags = Array.isArray(p.tags) ? p.tags : [];
+    return `<div class="prod" data-id="${esc(p.id)}">
+      <img src="${esc(p.foto || window.FOTO_KOSONG)}" alt="" onerror="this.onerror=null;this.src=window.FOTO_KOSONG">
+      <div><b>${esc(namaLengkap(p))}</b><span class="muted">${rupiah(p.harga)} &middot; ${esc((KATEGORI.find(k => k.id === p.kategori) || {}).label || p.kategori || '-')}${tags.length ? ' &middot; ' + tags.map(t => esc(LABEL_TAG[t] || t)).join(', ') : ''}</span></div>
+      <div class="prod-aksi"><button type="button" class="btn btn-garis btn-kecil" data-aksi="edit">Ubah</button><button type="button" class="btn btn-bahaya btn-kecil" data-aksi="hapus">Hapus</button></div>
+    </div>`;
+  }).join('') : '<div class="kosong">Belum ada produk.</div>';
 }
-
-function renderProduk() {
-  $('#jumlahProduk').textContent = `${daftar.length} produk`;
-  $('#daftarProduk').innerHTML = daftar.length ? daftar.map(p => {
-    const tags = (p.tags || []).filter(t => LABEL_TAG[t]).map(t => `<span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold">${LABEL_TAG[t]}</span>`).join('');
-    return `
-    <article class="flex gap-3 rounded-2xl border border-gray-200 bg-white p-3">
-      <img src="${esc(p.foto || window.FOTO_KOSONG)}" alt="" onerror="this.onerror=null;this.src=window.FOTO_KOSONG" class="h-20 w-24 shrink-0 rounded-xl border border-gray-200 bg-gray-50 object-cover sm:h-24 sm:w-32">
-      <div class="flex min-w-0 flex-1 flex-col">
-        <h3 class="truncate text-sm font-bold sm:text-base">${esc(p.merek)} ${esc(p.seri)}</h3>
-        <p class="mt-0.5 text-sm font-extrabold">${rupiah(p.harga)}${p.harganormal ? ` <span class="text-xs font-medium text-gray-500 line-through">${rupiah(p.harganormal)}</span>` : ''}</p>
-        <div class="mt-1 flex flex-wrap gap-1.5 text-xs text-gray-500"><span>${esc(p.kategori)}</span><span>&bull;</span><span>${esc(p.kondisi)}</span></div>
-        ${tags ? `<div class="mt-1.5 flex flex-wrap gap-1.5">${tags}</div>` : ''}
-        <div class="mt-auto flex gap-2 pt-3">
-          <button type="button" class="btn btn-line px-3 py-1.5" data-edit="${p.id}">Edit</button>
-          <button type="button" class="btn btn-danger px-3 py-1.5" data-hapus="${p.id}">Hapus</button>
-        </div>
-      </div>
-    </article>`;
-  }).join('') : `<div class="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
-      <p class="font-bold">Belum ada produk.</p>
-      <p class="mt-1 text-sm text-gray-600">Tekan "Tambah produk" untuk membuat yang pertama.</p></div>`;
-}
-
-$('#daftarProduk').addEventListener('click', async e => {
-  const be = e.target.closest('[data-edit]');
-  const bh = e.target.closest('[data-hapus]');
-  if (be) bukaFormProduk(daftar.find(x => String(x.id) === be.dataset.edit));
-  if (bh) {
-    const p = daftar.find(x => String(x.id) === bh.dataset.hapus);
-    if (!p || !confirm(`Hapus "${p.merek} ${p.seri}" dari katalog? Tindakan ini tidak bisa dibatalkan.`)) return;
-    const { error } = await sb.from('produk').delete().eq('id', p.id);
-    if (error) { toast(pesanError(error)); return; }
-    await hapusFile(p.foto);
-    toast('Produk dihapus');
-    muatProduk();
-  }
-});
-
-const dlg = $('#dlgProduk');
-$('#btnTambah').addEventListener('click', () => bukaFormProduk(null));
-$('#dlgTutup').addEventListener('click', () => dlg.close());
-$('#dlgBatal').addEventListener('click', () => dlg.close());
-pratinjau($('#pFotoFile'), $('#pFotoPreview'));
-
 function bukaFormProduk(p) {
-  sedangEditId = p ? p.id : null;
-  fotoLamaEdit = p ? (p.foto || '') : '';
-  $('#dlgJudul').textContent = p ? 'Edit produk' : 'Tambah produk';
-  tampilError($('#pError'), '');
-  let sp = p && p.spek;
-  if (typeof sp === 'string') { try { sp = JSON.parse(sp); } catch { sp = {}; } }
-  sp = sp || {};
-  $('#pKategori').value = p ? p.kategori : KATEGORI[0].id;
-  $('#pKondisi').value = p ? p.kondisi : 'bekas';
-  $('#pMerek').value = p ? p.merek : '';
-  $('#pSeri').value = p ? p.seri : '';
-  $('#pHarga').value = p ? p.harga : '';
-  $('#pHargaNormal').value = p && p.harganormal ? p.harganormal : '';
-  $$('input[name="pTag"]').forEach(c => { c.checked = !!(p && (p.tags || []).includes(c.value)); });
-  $('#sProcessor').value = sp.processor || '';
-  $('#sRam').value = sp.ram || '';
-  $('#sStorage').value = sp.storage || '';
-  $('#sVga').value = sp.vga || '';
-  $('#sLayar').value = sp.layar || '';
-  $('#pFotoFile').value = '';
-  $('#pFotoPreview').src = fotoLamaEdit || window.FOTO_KOSONG;
-  dlg.showModal();
+  editId = p ? p.id : null; fotoLama = p ? (p.foto || '') : '';
+  let sp = p ? p.spek : {}; if (typeof sp === 'string') { try { sp = JSON.parse(sp); } catch { sp = {}; } } sp = sp || {};
+  const tags = p && Array.isArray(p.tags) ? p.tags : [];
+  $('#dlgProdukJudul').textContent = p ? 'Ubah produk' : 'Tambah produk';
+  $('#p-kategori').value = p ? p.kategori : KATEGORI[0].id;
+  $('#p-kondisi').value = p && KONDISI[p.kondisi] ? p.kondisi : 'bekas';
+  $('#p-merek').value = p ? p.merek || '' : ''; $('#p-seri').value = p ? p.seri || '' : '';
+  $('#p-harga').value = p ? p.harga : ''; $('#p-normal').value = p && p.harganormal ? p.harganormal : '';
+  $('#p-proc').value = sp.processor || ''; $('#p-ram').value = sp.ram || ''; $('#p-storage').value = sp.storage || '';
+  $('#p-vga').value = sp.vga || ''; $('#p-layar').value = sp.layar || '';
+  $$('#p-tags input').forEach(c => { c.checked = tags.includes(c.value); });
+  $('#p-foto').value = ''; $('#p-preview').innerHTML = fotoLama ? `<img src="${esc(fotoLama)}" alt="Foto saat ini">` : '';
+  setPesan($('#pesanProduk'), ''); $('#pesanProduk').hidden = true;
+  dlgProduk.showModal();
 }
-
-$('#formProduk').addEventListener('submit', async e => {
+$('#btnProdukBaru').addEventListener('click', () => bukaFormProduk(null));
+$('#p-foto').addEventListener('change', e => {
+  const f = e.target.files[0]; $('#p-preview').innerHTML = f ? `<img src="${URL.createObjectURL(f)}" alt="Pratinjau">` : (fotoLama ? `<img src="${esc(fotoLama)}" alt="Foto saat ini">` : '');
+});
+$('#daftarProduk').addEventListener('click', async e => {
+  const b = e.target.closest('[data-aksi]'), row = e.target.closest('[data-id]'); if (!b || !row) return;
+  const p = produkList.find(x => String(x.id) === row.dataset.id); if (!p) return;
+  if (b.dataset.aksi === 'edit') return bukaFormProduk(p);
+  if (!confirm(`Hapus "${namaLengkap(p)}" dari toko? Tindakan ini tidak bisa dibatalkan.`)) return;
+  const { error } = await sb.from('produk').delete().eq('id', p.id);
+  if (error) return toast('Gagal menghapus: ' + pesanGalat(error));
+  await hapusFileStorage(p.foto); toast('Produk dihapus'); muatProduk();
+});
+formProduk.addEventListener('submit', async e => {
   e.preventDefault();
-  const err = $('#pError'); tampilError(err, '');
-  const btn = $('#btnSimpanProduk');
-  sibuk(btn, true, 'Menyimpan...');
+  const b = $('#btnSimpanProduk'), pesan = $('#pesanProduk'); b.disabled = true; pesan.hidden = true;
   try {
-    let foto = fotoLamaEdit;
-    const file = $('#pFotoFile').files[0];
-    if (file) foto = await unggahGambar(file, 'produk');
-
-    const harga = Math.round(Number($('#pHarga').value));
-    if (!Number.isFinite(harga) || harga < 0) throw new Error('Harga tidak valid.');
-    const hn = $('#pHargaNormal').value === '' ? null : Math.round(Number($('#pHargaNormal').value));
-
-    const payload = {
-      kategori: $('#pKategori').value,
-      merek: $('#pMerek').value.trim(),
-      seri: $('#pSeri').value.trim(),
-      harga,
-      harganormal: hn,
-      tags: $$('input[name="pTag"]').filter(c => c.checked).map(c => c.value),
-      kondisi: $('#pKondisi').value,
-      foto: foto || null,
-      spek: {
-        processor: $('#sProcessor').value.trim(),
-        ram: $('#sRam').value.trim(),
-        storage: $('#sStorage').value.trim(),
-        vga: $('#sVga').value.trim(),
-        layar: $('#sLayar').value.trim()
-      }
+    const file = $('#p-foto').files[0];
+    let foto = fotoLama;
+    if (file) { if (!file.type.startsWith('image/')) throw new Error('File foto harus berupa gambar'); foto = await unggah(file, 'produk'); }
+    const normal = Number($('#p-normal').value) || null;
+    const harga = Number($('#p-harga').value) || 0;
+    const isi = {
+      kategori: $('#p-kategori').value, kondisi: $('#p-kondisi').value,
+      merek: $('#p-merek').value.trim(), seri: $('#p-seri').value.trim(),
+      harga, harganormal: normal && normal > harga ? normal : null,
+      tags: $$('#p-tags input:checked').map(c => c.value), foto,
+      spek: { processor: $('#p-proc').value.trim(), ram: $('#p-ram').value.trim(), storage: $('#p-storage').value.trim(), vga: $('#p-vga').value.trim(), layar: $('#p-layar').value.trim() }
     };
-
-    const q = sedangEditId === null
-      ? sb.from('produk').insert(payload)
-      : sb.from('produk').update(payload).eq('id', sedangEditId);
-    const { error } = await q;
-    if (error) {
-      if (file) await hapusFile(foto); // batalkan unggahan yatim
-      throw error;
-    }
-    if (file && fotoLamaEdit) await hapusFile(fotoLamaEdit);
-
-    dlg.close();
-    toast(sedangEditId === null ? 'Produk ditambahkan' : 'Produk diperbarui');
-    muatProduk();
-  } catch (ex) {
-    tampilError(err, pesanError(ex));
-  } finally {
-    sibuk(btn, false);
-  }
+    const { error } = editId !== null ? await sb.from('produk').update(isi).eq('id', editId) : await sb.from('produk').insert(isi);
+    if (error) { if (file && foto !== fotoLama) await hapusFileStorage(foto); throw error; }
+    if (file && fotoLama && fotoLama !== foto) await hapusFileStorage(fotoLama);
+    dlgProduk.close(); toast('Produk tersimpan'); muatProduk();
+  } catch (err) { console.error(err); pesan.textContent = 'Gagal menyimpan: ' + pesanGalat(err); pesan.hidden = false; }
+  finally { b.disabled = false; }
 });
 
-/* =====================================================================
-   INFO TOKO
-   ===================================================================== */
-pratinjau($('#tFotoFile'), $('#tFotoPreview'));
+/* ---------- Mulai ---------- */
+const manajer = {};
+$$('[data-media]').forEach(root => { manajer[root.dataset.media] = buatManajerMedia(root, root.dataset.media); });
+function muatSemuaTab() { Object.values(manajer).forEach(m => m.muat()); muatInfo(); muatProduk(); }
 
-async function muatConfig() {
-  const { data, error } = await sb.from('config').select('*').order('id', { ascending: true }).limit(1);
-  if (error) { toast(pesanError(error)); return; }
-  configRow = (data && data[0]) || null;
-  const c = configRow || {};
-  $('#tWa').value = c.wa || '';
-  $('#tAlamat').value = c.alamat || '';
-  $('#tJam').value = c.jam || '';
-  $('#tIg').value = c.instagram || '';
-  $('#tPesan').value = c.pesan_umum || '';
-  $('#tMapsLink').value = c.maps_link || '';
-  $('#tPeta').value = c.peta_embed_url || '';
-  $('#tFotoFile').value = '';
-  if (c.foto_toko) { $('#tFotoPreview').src = c.foto_toko; $('#tFotoPreview').classList.remove('hidden'); }
-  else $('#tFotoPreview').classList.add('hidden');
-}
-
-function normalWa(v) {
-  let d = String(v || '').replace(/\D/g, '');
-  if (d.startsWith('0')) d = '62' + d.slice(1);
-  return d;
-}
-function ambilSrcEmbed(v) {
-  const m = String(v || '').match(/src\s*=\s*["']([^"']+)["']/i);
-  return (m ? m[1] : String(v || '')).trim();
-}
-
-$('#formToko').addEventListener('submit', async e => {
-  e.preventDefault();
-  const btn = $('#btnSimpanToko'); sibuk(btn, true, 'Menyimpan...');
-  try {
-    let fotoToko = configRow ? (configRow.foto_toko || null) : null;
-    const file = $('#tFotoFile').files[0];
-    const fotoLama = fotoToko;
-    if (file) fotoToko = await unggahGambar(file, 'toko');
-
-    const payload = {
-      wa: normalWa($('#tWa').value),
-      alamat: $('#tAlamat').value.trim(),
-      jam: $('#tJam').value.trim(),
-      instagram: $('#tIg').value.trim().replace(/^@/, ''),
-      pesan_umum: $('#tPesan').value.trim(),
-      maps_link: $('#tMapsLink').value.trim(),
-      peta_embed_url: ambilSrcEmbed($('#tPeta').value),
-      foto_toko: fotoToko
-    };
-    if (!payload.wa) throw new Error('Nomor WhatsApp wajib diisi.');
-
-    const q = configRow
-      ? sb.from('config').update(payload).eq('id', configRow.id)
-      : sb.from('config').insert(payload);
-    const { error } = await q;
-    if (error) { if (file) await hapusFile(fotoToko); throw error; }
-    if (file && fotoLama) await hapusFile(fotoLama);
-    toast('Info toko disimpan');
-    await muatConfig();
-  } catch (ex) {
-    toast(pesanError(ex));
-  } finally {
-    sibuk(btn, false);
-  }
-});
-
-/* =====================================================================
-   VIDEO
-   ===================================================================== */
-async function muatVideo() {
-  const { data, error } = await sb.from('video').select('*').order('created_at', { ascending: false }).limit(1);
-  if (error) { toast(pesanError(error)); return; }
-  videoRow = (data && data[0]) || null;
-  const v = $('#vPreview');
-  if (videoRow && videoRow.url_video) {
-    v.src = videoRow.url_video; v.classList.remove('hidden'); $('#vKosong').classList.add('hidden');
-    $('#vUrl').value = /supabase\.co\/storage/.test(videoRow.url_video) ? '' : videoRow.url_video;
-  } else {
-    v.removeAttribute('src'); v.classList.add('hidden'); $('#vKosong').classList.remove('hidden');
-  }
-  $('#vFile').value = '';
-}
-
-$('#formVideo').addEventListener('submit', async e => {
-  e.preventDefault();
-  const btn = $('#btnSimpanVideo');
-  const file = $('#vFile').files[0];
-  const urlManual = $('#vUrl').value.trim();
-  if (!file && !urlManual) { toast('Pilih file video atau isi link video.'); return; }
-  if (file && file.size > MAKS_VIDEO) { toast('Ukuran video melebihi 50 MB.'); return; }
-  if (!file && !/^https:\/\//i.test(urlManual)) { toast('Link video harus diawali https://'); return; }
-
-  sibuk(btn, true, file ? 'Mengunggah video...' : 'Menyimpan...');
-  try {
-    let url = urlManual;
-    if (file) {
-      const ext = (file.name.split('.').pop() || 'mp4').toLowerCase();
-      url = await unggah(file, 'video', ext, file.type || 'video/mp4');
-    }
-    const lama = videoRow && videoRow.url_video;
-    const q = videoRow
-      ? sb.from('video').update({ url_video: url }).eq('id', videoRow.id)
-      : sb.from('video').insert({ url_video: url });
-    const { error } = await q;
-    if (error) { if (file) await hapusFile(url); throw error; }
-    if (lama && lama !== url) await hapusFile(lama);
-    toast('Video disimpan');
-    await muatVideo();
-  } catch (ex) {
-    toast(pesanError(ex));
-  } finally {
-    sibuk(btn, false);
-  }
-});
+(async function mulai() {
+  const nama = location.hash.slice(1);
+  if (tabs.some(t => t.dataset.tab === nama)) pilihTab(nama);
+  const { data } = await sb.auth.getSession();
+  tampilkan(data.session);
+  sb.auth.onAuthStateChange((_e, session) => tampilkan(session));
+})();

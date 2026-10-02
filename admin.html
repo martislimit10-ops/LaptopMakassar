@@ -1,235 +1,116 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#FFFFFF">
-<title>Panel Admin - Laptop Makassar</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
-<style type="text/tailwindcss">
-  @layer components {
-    .fld { @apply w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-[#111827] outline-none focus:border-[#111827]; }
-    .lbl { @apply mb-1 block text-sm font-semibold text-gray-700; }
-    .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60; }
-    .btn-dark { @apply bg-[#1F2937] text-white hover:bg-[#111827]; }
-    .btn-line { @apply border border-gray-300 bg-white text-[#111827] hover:border-[#111827]; }
-    .btn-danger { @apply border border-red-200 bg-white text-red-700 hover:bg-red-50; }
-    .tab { @apply border-b-2 border-transparent px-1 pb-3 text-sm font-semibold text-gray-500 hover:text-[#111827]; }
-    .tab[aria-selected="true"] { @apply border-[#111827] text-[#111827]; }
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Panel Admin | Laptop Makassar</title>
+  <link rel="icon" href="images/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
 </head>
-<body class="min-h-screen bg-[#F9FAFB]">
+<body>
 
-<!-- ============ HEADER ============ -->
-<header class="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur">
-  <div class="mx-auto flex h-16 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6">
-    <div class="flex items-center gap-2.5">
-      <img src="images/logo.png" alt="" class="h-9 w-9 rounded-xl object-cover shadow-sm">
-      <span class="font-bold text-gray-800">Panel Admin</span>
-    </div>
-    <div class="flex items-center gap-2">
-      <a href="index.html" class="btn btn-line">Lihat website</a>
-      <button type="button" id="btnKeluar" class="btn btn-line hidden">Keluar</button>
-    </div>
-  </div>
-</header>
+<!-- ===== LOGIN ===== -->
+<section id="viewLogin" class="login" hidden>
+  <form id="formLogin" class="login-kartu" autocomplete="on">
+    <img src="images/logo.png" alt="" width="48" height="48">
+    <h1>Panel Admin</h1>
+    <p class="muted">Laptop Makassar</p>
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="username" required>
+    <label for="sandi">Kata sandi</label>
+    <input id="sandi" type="password" autocomplete="current-password" required>
+    <p id="loginPesan" class="pesan galat" role="alert" hidden></p>
+    <button type="submit" class="btn" id="btnMasuk">Masuk</button>
+    <a href="index.html" class="kembali">&larr; Kembali ke website</a>
+  </form>
+</section>
 
-<main class="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-
-  <!-- ============ VIEW LOGIN ============ -->
-  <section id="viewLogin" class="mx-auto hidden max-w-sm">
-    <div class="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8">
-      <h1 class="text-xl font-extrabold tracking-tight">Masuk admin</h1>
-      <p class="mt-1 text-sm text-gray-600">Halaman ini hanya untuk pengelola toko.</p>
-      <form id="formLogin" class="mt-6 space-y-4" autocomplete="on">
-        <div>
-          <label for="loginEmail" class="lbl">Email</label>
-          <input id="loginEmail" type="email" class="fld" required autocomplete="username" inputmode="email">
-        </div>
-        <div>
-          <label for="loginPass" class="lbl">Password</label>
-          <input id="loginPass" type="password" class="fld" required autocomplete="current-password">
-        </div>
-        <p id="loginError" class="hidden rounded-xl bg-red-50 px-3.5 py-2.5 text-sm text-red-700" role="alert"></p>
-        <button type="submit" id="btnMasuk" class="btn btn-dark w-full">Masuk</button>
-      </form>
-    </div>
-  </section>
-
-  <!-- ============ VIEW PANEL ============ -->
-  <section id="viewPanel" class="hidden">
-    <div class="flex gap-6 border-b border-gray-200" role="tablist" aria-label="Menu panel admin">
-      <button type="button" class="tab" role="tab" data-tab="produk" aria-selected="true">Produk</button>
-      <button type="button" class="tab" role="tab" data-tab="toko" aria-selected="false">Info toko</button>
-      <button type="button" class="tab" role="tab" data-tab="video" aria-selected="false">Video</button>
-    </div>
-
-    <!-- TAB PRODUK -->
-    <div id="tabProduk" class="pt-6">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <p id="jumlahProduk" class="text-sm text-gray-600"></p>
-        <button type="button" id="btnTambah" class="btn btn-dark">Tambah produk</button>
+<!-- ===== PANEL ===== -->
+<div id="viewPanel" hidden>
+  <header class="top">
+    <div class="top-in">
+      <strong>Panel Admin</strong>
+      <div class="top-aksi">
+        <a href="index.html" target="_blank" rel="noopener" class="btn btn-garis btn-kecil">Lihat website</a>
+        <button type="button" id="btnKeluar" class="btn btn-garis btn-kecil">Keluar</button>
       </div>
-      <div id="daftarProduk" class="mt-4 space-y-3"></div>
     </div>
+    <nav class="tabs" role="tablist" aria-label="Bagian yang dikelola">
+      <button role="tab" id="tab-hero_desktop" aria-selected="true"  aria-controls="pnl-hero_desktop" data-tab="hero_desktop">Hero Desktop</button>
+      <button role="tab" id="tab-hero_hp"      aria-selected="false" aria-controls="pnl-hero_hp"      data-tab="hero_hp" tabindex="-1">Hero HP</button>
+      <button role="tab" id="tab-toko"         aria-selected="false" aria-controls="pnl-toko"         data-tab="toko" tabindex="-1">Slider Toko</button>
+      <button role="tab" id="tab-info"         aria-selected="false" aria-controls="pnl-info"         data-tab="info" tabindex="-1">Info &amp; Kontak</button>
+      <button role="tab" id="tab-produk"       aria-selected="false" aria-controls="pnl-produk"       data-tab="produk" tabindex="-1">Produk</button>
+    </nav>
+  </header>
 
-    <!-- TAB INFO TOKO -->
-    <div id="tabToko" class="hidden pt-6">
-      <form id="formToko" class="space-y-5 rounded-2xl border border-gray-200 bg-white p-5 sm:p-6">
-        <div>
-          <label for="tWa" class="lbl">Nomor WhatsApp</label>
-          <input id="tWa" class="fld" inputmode="numeric" placeholder="6285117822767">
-          <p class="mt-1 text-xs text-gray-500">Awali dengan 62, tanpa spasi atau tanda plus. Awalan 0 diubah otomatis.</p>
-        </div>
-        <div>
-          <label for="tAlamat" class="lbl">Alamat toko</label>
-          <textarea id="tAlamat" rows="2" class="fld"></textarea>
-        </div>
-        <div class="grid gap-5 sm:grid-cols-2">
-          <div>
-            <label for="tJam" class="lbl">Jam operasional</label>
-            <input id="tJam" class="fld">
-          </div>
-          <div>
-            <label for="tIg" class="lbl">Username Instagram</label>
-            <input id="tIg" class="fld" placeholder="laptop_makassar">
-          </div>
-        </div>
-        <div>
-          <label for="tPesan" class="lbl">Pesan WhatsApp umum</label>
-          <input id="tPesan" class="fld">
-        </div>
-        <div>
-          <label for="tMapsLink" class="lbl">Link "Buka di Google Maps"</label>
-          <input id="tMapsLink" class="fld" placeholder="https://maps.app.goo.gl/...">
-        </div>
-        <div>
-          <label for="tPeta" class="lbl">Peta tersemat (embed)</label>
-          <textarea id="tPeta" rows="3" class="fld text-xs" placeholder="Tempel URL embed atau seluruh kode iframe dari Google Maps"></textarea>
-        </div>
-        <div>
-          <span class="lbl">Foto tampak depan toko</span>
-          <img id="tFotoPreview" alt="" class="mb-3 hidden aspect-[16/10] w-full max-w-xs rounded-xl border border-gray-200 object-cover">
-          <input id="tFotoFile" type="file" accept="image/*" class="fld text-xs">
-        </div>
-        <div class="flex justify-end border-t border-gray-200 pt-5">
-          <button type="submit" id="btnSimpanToko" class="btn btn-dark">Simpan info toko</button>
-        </div>
-      </form>
-    </div>
+  <main class="isi">
+    <!-- Tiga tab media memakai komponen yang sama (diisi oleh admin.js) -->
+    <section id="pnl-hero_desktop" role="tabpanel" aria-labelledby="tab-hero_desktop" data-media="hero_desktop"></section>
+    <section id="pnl-hero_hp"      role="tabpanel" aria-labelledby="tab-hero_hp"      data-media="hero_hp" hidden></section>
+    <section id="pnl-toko"         role="tabpanel" aria-labelledby="tab-toko"         data-media="toko" hidden></section>
 
-    <!-- TAB VIDEO -->
-    <div id="tabVideo" class="hidden pt-6">
-      <form id="formVideo" class="space-y-5 rounded-2xl border border-gray-200 bg-white p-5 sm:p-6">
-        <div>
-          <span class="lbl">Video di halaman utama saat ini</span>
-          <video id="vPreview" class="aspect-video w-full max-w-md rounded-xl bg-black" controls muted playsinline preload="metadata"></video>
-          <p id="vKosong" class="hidden text-sm text-gray-600">Belum ada video di database. Website memakai video bawaan (video/promo.mp4).</p>
-        </div>
-        <div>
-          <label for="vFile" class="lbl">Unggah video baru</label>
-          <input id="vFile" type="file" accept="video/*" class="fld text-xs">
-          <p class="mt-1 text-xs text-gray-500">Maksimal 50 MB (batas paket Free Supabase). Format MP4 paling aman di semua HP.</p>
-        </div>
-        <div>
-          <label for="vUrl" class="lbl">Atau tempel link video (https)</label>
-          <input id="vUrl" class="fld" placeholder="https://...">
-        </div>
-        <div class="flex justify-end border-t border-gray-200 pt-5">
-          <button type="submit" id="btnSimpanVideo" class="btn btn-dark">Simpan video</button>
-        </div>
-      </form>
-    </div>
-  </section>
-</main>
-
-<!-- ============ DIALOG PRODUK ============ -->
-<dialog id="dlgProduk" class="w-full max-w-2xl rounded-2xl p-0 shadow-2xl backdrop:bg-black/50">
-  <form id="formProduk" class="flex max-h-[92dvh] flex-col bg-white">
-    <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4">
-      <h2 id="dlgJudul" class="text-base font-bold">Produk</h2>
-      <button type="button" id="dlgTutup" class="grid h-9 w-9 place-items-center rounded-full text-gray-500 hover:bg-gray-100" aria-label="Tutup">&#10005;</button>
-    </div>
-
-    <div class="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5">
-      <div>
-        <span class="lbl">Foto produk</span>
-        <div class="flex items-center gap-4">
-          <img id="pFotoPreview" alt="" class="h-24 w-32 shrink-0 rounded-xl border border-gray-200 bg-gray-50 object-cover">
-          <div class="min-w-0 flex-1">
-            <input id="pFotoFile" type="file" accept="image/*" class="fld text-xs">
-            <p class="mt-1 text-xs text-gray-500">Foto diperkecil otomatis lalu disimpan di Supabase Storage.</p>
-          </div>
-        </div>
+    <!-- Info & Kontak -->
+    <section id="pnl-info" role="tabpanel" aria-labelledby="tab-info" hidden>
+      <div class="bagian-kepala">
+        <div><h2>Informasi &amp; Kontak Toko</h2>
+        <p class="muted">Dipakai di sidebar, footer, bagian lokasi, tombol Contact, dan pesan WhatsApp.</p></div>
       </div>
+      <form id="formInfo" class="kartu form-grid">
+        <div class="f"><label for="i-wa">Nomor WhatsApp CS</label><input id="i-wa" name="wa" inputmode="numeric" placeholder="6285117822767"><small>Format internasional tanpa + atau spasi, contoh 6285117822767.</small></div>
+        <div class="f"><label for="i-pesan">Pesan pembuka WhatsApp (tombol Contact)</label><input id="i-pesan" name="pesan_umum"></div>
+        <div class="f f-lebar"><label for="i-alamat">Alamat</label><textarea id="i-alamat" name="alamat" rows="2"></textarea></div>
+        <div class="f"><label for="i-jam">Jam operasional</label><input id="i-jam" name="jam" placeholder="Senin - Minggu: 09.00 - 21.00 WITA"></div>
+        <div class="f"><label for="i-email">Email dukungan</label><input id="i-email" name="email" type="email"></div>
+        <div class="f"><label for="i-ig">Instagram</label><input id="i-ig" name="instagram" placeholder="laptop_makassar atau link lengkap"></div>
+        <div class="f"><label for="i-tt">TikTok</label><input id="i-tt" name="tiktok" placeholder="laptop_makassar atau link lengkap"></div>
+        <div class="f f-lebar"><label for="i-maps">Link Google Maps</label><input id="i-maps" name="maps_link" type="url" placeholder="https://maps.app.goo.gl/..."></div>
+        <div class="f f-lebar"><label for="i-peta">Link peta tersemat (embed)</label><input id="i-peta" name="peta_embed_url" type="url" placeholder="https://www.google.com/maps/embed?pb=..."><small>Google Maps &rarr; Bagikan &rarr; Sematkan peta &rarr; salin isi src="..." saja.</small></div>
+        <div class="f f-lebar"><label for="i-desk">Deskripsi singkat toko (footer)</label><textarea id="i-desk" name="deskripsi" rows="3"></textarea></div>
+        <div class="f-aksi"><button type="submit" class="btn" id="btnSimpanInfo">Simpan</button><span id="pesanInfo" class="pesan" role="status"></span></div>
+      </form>
+    </section>
 
-      <div class="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label for="pKategori" class="lbl">Kategori</label>
-          <select id="pKategori" class="fld" required></select>
-        </div>
-        <div>
-          <label for="pKondisi" class="lbl">Kondisi</label>
-          <select id="pKondisi" class="fld">
-            <option value="bekas">Bekas, mulus</option>
-            <option value="baru">Baru, segel</option>
-          </select>
-        </div>
-        <div>
-          <label for="pMerek" class="lbl">Merek</label>
-          <input id="pMerek" class="fld" required placeholder="ASUS">
-        </div>
-        <div>
-          <label for="pSeri" class="lbl">Seri</label>
-          <input id="pSeri" class="fld" required placeholder="TUF Gaming F15 FX506HC">
-        </div>
-        <div>
-          <label for="pHarga" class="lbl">Harga (Rp)</label>
-          <input id="pHarga" type="number" min="0" step="1000" inputmode="numeric" class="fld" required>
-        </div>
-        <div>
-          <label for="pHargaNormal" class="lbl">Harga normal / coret (opsional)</label>
-          <input id="pHargaNormal" type="number" min="0" step="1000" inputmode="numeric" class="fld">
-        </div>
+    <!-- Produk -->
+    <section id="pnl-produk" role="tabpanel" aria-labelledby="tab-produk" hidden>
+      <div class="bagian-kepala">
+        <div><h2>Produk</h2><p class="muted">Produk baru otomatis muncul paling depan di toko.</p></div>
+        <button type="button" class="btn" id="btnProdukBaru">+ Tambah produk</button>
       </div>
+      <div id="daftarProduk" class="daftar"></div>
+    </section>
+  </main>
+</div>
 
-      <fieldset>
-        <legend class="lbl">Label</legend>
-        <div class="flex flex-wrap gap-2">
-          <label class="inline-flex items-center gap-2 rounded-full border border-gray-300 px-3.5 py-2 text-sm font-semibold"><input type="checkbox" name="pTag" value="promo"> Promo</label>
-          <label class="inline-flex items-center gap-2 rounded-full border border-gray-300 px-3.5 py-2 text-sm font-semibold"><input type="checkbox" name="pTag" value="baru"> Baru masuk</label>
-          <label class="inline-flex items-center gap-2 rounded-full border border-gray-300 px-3.5 py-2 text-sm font-semibold"><input type="checkbox" name="pTag" value="terlaris"> Terlaris</label>
-        </div>
-      </fieldset>
-
-      <fieldset class="grid gap-4 sm:grid-cols-2">
-        <legend class="lbl">Spesifikasi</legend>
-        <div><label for="sProcessor" class="lbl font-medium">Processor</label><input id="sProcessor" class="fld"></div>
-        <div><label for="sRam" class="lbl font-medium">RAM</label><input id="sRam" class="fld"></div>
-        <div><label for="sStorage" class="lbl font-medium">Storage</label><input id="sStorage" class="fld"></div>
-        <div><label for="sVga" class="lbl font-medium">Kartu grafis (VGA)</label><input id="sVga" class="fld"></div>
-        <div class="sm:col-span-2"><label for="sLayar" class="lbl font-medium">Ukuran layar</label><input id="sLayar" class="fld"></div>
-      </fieldset>
-
-      <p id="pError" class="hidden rounded-xl bg-red-50 px-3.5 py-2.5 text-sm text-red-700" role="alert"></p>
+<!-- Form produk -->
+<dialog id="dlgProduk" class="dlg" aria-labelledby="dlgProdukJudul">
+  <form id="formProduk">
+    <div class="dlg-head"><h2 id="dlgProdukJudul">Tambah produk</h2><button type="button" class="btn btn-garis btn-kecil" data-tutup>Tutup</button></div>
+    <div class="dlg-body form-grid">
+      <div class="f"><label for="p-kategori">Kategori</label><select id="p-kategori" required></select></div>
+      <div class="f"><label for="p-kondisi">Kondisi</label><select id="p-kondisi"><option value="bekas">Bekas, mulus</option><option value="baru">Baru, segel</option></select></div>
+      <div class="f"><label for="p-merek">Merek</label><input id="p-merek" required placeholder="ASUS"></div>
+      <div class="f"><label for="p-seri">Seri / model</label><input id="p-seri" required placeholder="Vivobook 14 A1400EA"></div>
+      <div class="f"><label for="p-harga">Harga (Rp)</label><input id="p-harga" type="number" min="0" step="1000" required></div>
+      <div class="f"><label for="p-normal">Harga normal / coret (Rp, opsional)</label><input id="p-normal" type="number" min="0" step="1000"></div>
+      <div class="f"><label for="p-proc">Processor</label><input id="p-proc" placeholder="Intel Core i5-1135G7"></div>
+      <div class="f"><label for="p-ram">RAM</label><input id="p-ram" placeholder="8 GB DDR4"></div>
+      <div class="f"><label for="p-storage">Storage</label><input id="p-storage" placeholder="512 GB SSD NVMe"></div>
+      <div class="f"><label for="p-vga">Kartu grafis (VGA)</label><input id="p-vga" placeholder="Intel Iris Xe"></div>
+      <div class="f"><label for="p-layar">Ukuran layar</label><input id="p-layar" placeholder="14 inci"></div>
+      <div class="f"><span class="lbl">Label</span><div class="cek" id="p-tags"></div></div>
+      <div class="f f-lebar"><label for="p-foto">Foto produk (rasio 4:3 disarankan)</label><input id="p-foto" type="file" accept="image/*"><div id="p-preview" class="preview-foto"></div></div>
+      <p id="pesanProduk" class="pesan galat f-lebar" role="alert" hidden></p>
     </div>
-
-    <div class="flex gap-3 border-t border-gray-200 px-5 py-4">
-      <button type="button" id="dlgBatal" class="btn btn-line flex-1">Batal</button>
-      <button type="submit" id="btnSimpanProduk" class="btn btn-dark flex-1">Simpan produk</button>
-    </div>
+    <div class="dlg-foot"><button type="submit" class="btn" id="btnSimpanProduk">Simpan produk</button></div>
   </form>
 </dialog>
 
-<div id="toast" class="pointer-events-none fixed inset-x-0 bottom-6 z-50 hidden justify-center px-4">
-  <p class="rounded-xl bg-[#111827] px-4 py-3 text-sm font-semibold text-white shadow-lg"></p>
-</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
