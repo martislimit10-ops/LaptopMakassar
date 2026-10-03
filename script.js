@@ -234,7 +234,7 @@ function pasangGeser(el, aksi) {
 }
 
 /* ---------- 5. Galeri "Kunjungi toko kami" (3-4 slot, dikelola dari admin) [PATCH-GALERI] ---------- */
-const GALERI_MAKS = 4, GALERI_MIN = 3;
+const GALERI_MAKS = 4;
 const galeri = { sig: '' };
 /* Nama fungsi sengaja dipertahankan agar pemanggil lama (muatSemua & bagian Mulai) tetap jalan */
 function renderSliderToko() {
@@ -243,15 +243,27 @@ function renderSliderToko() {
   const sig = JSON.stringify(l.map(b => [b.id, b.url, b.judul, b.urutan]));
   if (sig === galeri.sig) return;
   galeri.sig = sig;
-  const slot = Math.max(GALERI_MIN, l.length);
-  let html = '';
-  for (let i = 0; i < slot; i++) {
-    const b = l[i];
-    html += b
-      ? `<figure class="galeri-item"><img src="${esc(b.url)}" alt="${esc(b.judul || 'Foto toko Laptop Makassar')}" loading="lazy" ${fotoErr}>${b.judul ? `<figcaption>${esc(b.judul)}</figcaption>` : ''}</figure>`
-      : `<figure class="galeri-item galeri-kosong"><img src="${window.FOTO_KOSONG}" alt="" loading="lazy"></figure>`;
+  if (!l.length) {
+    root.innerHTML = `<figure class="galeri-item galeri-kosong"><img src="${window.FOTO_KOSONG}" alt="" loading="lazy"></figure>`;
+    return;
   }
-  root.innerHTML = html;
+  root.innerHTML = l.map(b =>
+    `<figure class="galeri-item"><img src="${esc(b.url)}" alt="${esc(b.judul || 'Foto toko Laptop Makassar')}" loading="lazy" ${fotoErr}>${b.judul ? `<figcaption>${esc(b.judul)}</figcaption>` : ''}</figure>`
+  ).join('');
+}
+
+/* ---------- 5b. Promo Saat Ini (bagian = 'promo' di tabel banner) [PATCH-PROMO] ---------- */
+const promo = { sig: '' };
+function renderPromo() {
+  const sec = $('#promo'), root = $('#promoList'); if (!sec || !root) return;
+  const l = BANNER.filter(b => b.bagian === 'promo' && b.jenis === 'foto');
+  const sig = JSON.stringify(l.map(b => [b.id, b.url, b.judul, b.urutan]));
+  if (sig === promo.sig) return;
+  promo.sig = sig;
+  sec.hidden = !l.length;
+  root.innerHTML = l.map((b, i) =>
+    `<figure class="promo-item"><img src="${esc(b.url)}" alt="${esc(b.judul || 'Promo Laptop Makassar')}" ${i < 2 ? '' : 'loading="lazy"'} ${fotoErr}></figure>`
+  ).join('');
 }
 
 /* ---------- 6. Halaman Toko (#toko) ---------- */
@@ -634,7 +646,7 @@ async function muatSemua() {
   hasil.forEach(h => { if (h.status === 'rejected') console.error('Gagal memuat dari Supabase:', h.reason); });
   gagalMemuat = hasil[0].status === 'rejected';
   sedangMemuat = false; terakhirMuat = Date.now();
-  renderKatalog(); terapkanConfig(); renderHero(); renderSliderToko(); bersihkanKeranjang();
+  renderKatalog(); terapkanConfig(); renderHero(); renderSliderToko(); renderPromo(); bersihkanKeranjang();
 }
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && Date.now() - terakhirMuat > 20000) muatSemua();
@@ -650,6 +662,7 @@ try {
 terapkanConfig();
 renderHero();
 renderSliderToko();
+renderPromo();
 renderKeranjang();
 muatSemua();
 sinkronToko();

@@ -119,179 +119,41 @@
       </div>
     </section>
 
-   <!-- ============ KUNJUNGI TOKO KAMI ============ -->
+    <!-- ============ LOGO MEREK ============ -->
+    <section id="merek" class="blok blok-merek" aria-label="Merek laptop">
+      <div class="wadah">
+        <ul class="merek-list">
+        <li class="merek-item"><img src="images/brands/asus.png" alt="" loading="lazy" onerror="this.remove()"><span>ASUS</span></li>
+        <li class="merek-item"><img src="images/brands/acer.png" alt="" loading="lazy" onerror="this.remove()"><span>Acer</span></li>
+        <li class="merek-item"><img src="images/brands/lenovo.png" alt="" loading="lazy" onerror="this.remove()"><span>Lenovo</span></li>
+        <li class="merek-item"><img src="images/brands/hp.png" alt="" loading="lazy" onerror="this.remove()"><span>HP</span></li>
+        <li class="merek-item"><img src="images/brands/dell.png" alt="" loading="lazy" onerror="this.remove()"><span>Dell</span></li>
+        <li class="merek-item"><img src="images/brands/msi.png" alt="" loading="lazy" onerror="this.remove()"><span>MSI</span></li>
+        <li class="merek-item"><img src="images/brands/apple.png" alt="" loading="lazy" onerror="this.remove()"><span>Apple</span></li>
+        <li class="merek-item"><img src="images/brands/samsung.png" alt="" loading="lazy" onerror="this.remove()"><span>Samsung</span></li>
+        <li class="merek-item"><img src="images/brands/toshiba.png" alt="" loading="lazy" onerror="this.remove()"><span>Toshiba</span></li>
+        <li class="merek-item"><img src="images/brands/huawei.png" alt="" loading="lazy" onerror="this.remove()"><span>Huawei</span></li>
+        <li class="merek-item"><img src="images/brands/xiaomi.png" alt="" loading="lazy" onerror="this.remove()"><span>Xiaomi</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ KUNJUNGI TOKO KAMI ============ -->
     <section id="lokasi" class="blok">
-      <div class="wadah" style="text-align: center;">
-        <h2 class="judul" style="font-weight: 400; letter-spacing: 0.5px; margin-bottom: 24px;">Kunjungi toko kami</h2>
-        
-        <!-- Galeri Foto Toko -->
+      <div class="wadah">
+        <h2 class="judul judul-tengah">Kunjungi toko kami</h2>
         <div id="galeriToko" class="galeri" aria-label="Galeri foto toko"></div>
       </div>
     </section>
 
-   <!-- ============ PROMO SAAT INI (RESPONSIF) ============ -->
-    <section class="blok">
+    <!-- ============ PROMO SAAT INI (diisi dari tabel banner, bagian = promo) ============ -->
+    <section id="promo" class="blok" hidden>
       <div class="wadah">
-        <h2 class="judul" style="font-weight: 400; text-align: center; margin-bottom: 28px; letter-spacing: 0.5px; font-size: 24px;">Promo Saat Ini</h2>
-        
-        <div style="position: relative; max-width: 100%; margin: 0 auto;">
-          
-          <!-- Tombol Geser Kiri -->
-          <button onclick="geserSliderPromo(-1)" style="position: absolute; left: -15px; top: 50%; transform: translateY(-50%); z-index: 10; background: rgba(0,0,0,0.7); color: #fff; border: none; border-radius: 50%; width: 42px; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">❮</button>
-          
-          <!-- Container Kartu Geser -->
-          <div id="containerPromo" style="display: flex; gap: 20px; overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; padding: 6px 0;" class="hide-scrollbar">
-            
-            <div class="card-promo-responsive"><img src="URL_BANNER_1.jpg" alt="Promo 1"></div>
-            <div class="card-promo-responsive"><img src="URL_BANNER_2.jpg" alt="Promo 2"></div>
-            <div class="card-promo-responsive"><img src="URL_BANNER_3.jpg" alt="Promo 3"></div>
-            <div class="card-promo-responsive"><img src="URL_BANNER_4.jpg" alt="Promo 4"></div>
-            <div class="card-promo-responsive"><img src="URL_BANNER_5.jpg" alt="Promo 5"></div>
-
-          </div>
-
-          <!-- Tombol Geser Kanan -->
-          <button onclick="geserSliderPromo(1)" style="position: absolute; right: -15px; top: 50%; transform: translateY(-50%); z-index: 10; background: rgba(0,0,0,0.7); color: #fff; border: none; border-radius: 50%; width: 42px; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">❯</button>
-
-        </div>
+        <h2 class="judul judul-tengah">Promo Saat Ini</h2>
+        <div id="promoList" class="promo-list" aria-label="Daftar promo"></div>
       </div>
     </section>
-
-    <!-- CSS Pengatur Ukuran Laptop vs HP -->
-    <style>
-      .card-promo-responsive {
-        min-width: calc(50% - 10px);
-        flex: 0 0 calc(50% - 10px);
-        background: var(--bg-surface, #1e2025);
-        border: 1px solid var(--border-color, #2a2e39);
-        border-radius: 18px;
-        overflow: hidden;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-      }
-      .card-promo-responsive img {
-        width: 100%;
-        height: 400px;
-        object-fit: cover;
-        display: block;
-      }
-      @media (max-width: 768px) {
-        .card-promo-responsive {
-          min-width: 100%;
-          flex: 0 0 100%;
-          border-radius: 14px;
-        }
-        .card-promo-responsive img {
-          height: 240px;
-        }
-      }
-    </style>
-
-    <script>
-      function geserSliderPromo(direction) {
-        const container = document.getElementById('containerPromo');
-        const scrollAmount = container.clientWidth * 0.8;
-        container.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
-      }
-    </script>
-
-
-    <!-- ============ PROMO / BANNER SLIDER BERPASANGAN (RESPONSIF) ============ -->
-    <section class="blok">
-      <div class="wadah">
-        <h2 class="judul" style="font-weight: 400; text-align: center; margin-bottom: 28px; letter-spacing: 0.5px; font-size: 24px;">Promo Saat Ini</h2>
-        
-        <!-- Wadah Slider Utama -->
-        <div style="position: relative; max-width: 100%; margin: 0 auto;">
-          
-          <!-- Tombol Geser Kiri -->
-          <button onclick="geserSliderPromo(-1)" style="position: absolute; left: -15px; top: 50%; transform: translateY(-50%); z-index: 10; background: rgba(0,0,0,0.7); color: #fff; border: none; border-radius: 50%; width: 42px; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">❮</button>
-          
-          <!-- Container Kartu Geser -->
-          <div id="containerPromo" style="display: flex; gap: 20px; overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; padding: 6px 0;" class="hide-scrollbar">
-            
-            <!-- Slide 1 -->
-            <div class="card-promo-responsive">
-              <img src="URL_BANNER_1.jpg" alt="Promo 1">
-            </div>
-
-            <!-- Slide 2 -->
-            <div class="card-promo-responsive">
-              <img src="URL_BANNER_2.jpg" alt="Promo 2">
-            </div>
-
-            <!-- Slide 3 -->
-            <div class="card-promo-responsive">
-              <img src="URL_BANNER_3.jpg" alt="Promo 3">
-            </div>
-
-            <!-- Slide 4 -->
-            <div class="card-promo-responsive">
-              <img src="URL_BANNER_4.jpg" alt="Promo 4">
-            </div>
-
-            <!-- Slide 5 -->
-            <div class="card-promo-responsive">
-              <img src="URL_BANNER_5.jpg" alt="Promo 5">
-            </div>
-
-          </div>
-
-          <!-- Tombol Geser Kanan -->
-          <button onclick="geserSliderPromo(1)" style="position: absolute; right: -15px; top: 50%; transform: translateY(-50%); z-index: 10; background: rgba(0,0,0,0.7); color: #fff; border: none; border-radius: 50%; width: 42px; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">❯</button>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- CSS Pengatur Ukuran Terpisah (Laptop vs HP) -->
-    <style>
-      /* Ukuran Default (Khusus Laptop / Layar Lebar) */
-      .card-promo-responsive {
-        min-width: calc(50% - 10px);
-        flex: 0 0 calc(50% - 10px);
-        background: var(--bg-surface, #1e2025);
-        border: 1px solid var(--border-color, #2a2e39);
-        border-radius: 18px;
-        overflow: hidden;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-      }
-      .card-promo-responsive img {
-        width: 100%;
-        height: 400px;
-        object-fit: cover;
-        display: block;
-      }
-
-      /* Ukuran Khusus HP (Layar di bawah 768px) -> Otomatis Punya Ruang Sendiri */
-      @media (max-width: 768px) {
-        .card-promo-responsive {
-          min-width: 100%;
-          flex: 0 0 100%;
-          border-radius: 14px;
-        }
-        .card-promo-responsive img {
-          height: 240px; /* Tinggi proporsional khusus HP, tidak gepeng */
-        }
-      }
-    </style>
-
-    <!-- Script Pendukung Tombol Geser -->
-    <script>
-      function geserSliderPromo(direction) {
-        const container = document.getElementById('containerPromo');
-        const scrollAmount = container.clientWidth * 0.8;
-        container.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
-      }
-    </script>
-
-    <!-- Script Pendukung Tombol Geser -->
-    <script>
-      function geserSliderPromo(direction) {
-        const container = document.getElementById('containerPromo');
-        const scrollAmount = container.clientWidth * 0.75;
-        container.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
-      }
-    </script>
+  </main>
 
   <!-- ============ FOOTER MULTI-KOLOM ============ -->
   <footer class="foot">

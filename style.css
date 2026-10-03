@@ -293,16 +293,6 @@ html[data-device="hp"] .dlg{margin:auto auto 0;width:min(100%,var(--kolom));max-
   html[data-device="desktop"] .foot-grid{grid-template-columns:1fr 1fr}
 }
 
-/* [PATCH-GALERI] Layout: 2 foto sedang di atas, 1 besar di tengah, 1 memanjang di bawah. Tiap kotak terpisah oleh gap. */
-.galeri{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:1100px;margin:0 auto}
-.galeri-item{position:relative;min-width:0;margin:0;overflow:hidden;border:1px solid var(--garis);border-radius:var(--r);background:var(--surface-2);aspect-ratio:4/3}
-.galeri-item:nth-child(3){grid-column:1/-1;aspect-ratio:16/9}
-.galeri-item:nth-child(4){grid-column:1/-1;aspect-ratio:21/9}
-.galeri-item img{width:100%;height:100%;object-fit:cover;transition:transform .35s ease}
-.galeri-item figcaption{position:absolute;left:0;right:0;bottom:0;padding:22px 14px 12px;font-size:13px;font-weight:500;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.6))}
-@media (hover:hover) and (pointer:fine){.galeri{gap:18px}.galeri-item:hover img{transform:scale(1.04)}}
-@media (prefers-reduced-motion:reduce){.galeri-item img{transition:none}}
-
 /* [PATCH-CHATBOT] Tampilan bubble chat */
 .dlg-chat{height:min(680px,calc(var(--vh100,100svh) - 32px))}
 html[data-device="desktop"] .dlg-chat{margin-top:auto}
@@ -348,32 +338,36 @@ html[data-device="desktop"] .dlg-chat{margin-top:auto}
   html:not([data-device="hp"]) .hdr-nav button{padding:8px 8px;font-size:13px}
 }
 
-/* ---------- Perbaikan Promo Responsive (Anti-Gepeng) ---------- */
-.card-promo-responsive {
-  min-width: 85%;
-  flex: 0 0 85%;
-  background: var(--bg-surface, #1e2025);
-  border: 1px solid var(--border-color, #2a2e39);
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
+/* =====================================================================
+   [PATCH-LAYOUT] Logo merek, Kunjungi toko kami, Promo Saat Ini
+   HP: 1 kolom, lebar penuh, gambar utuh (tidak dipotong), jarak rapat
+   Laptop: 2 kolom
+   ===================================================================== */
+.blok{padding-top:28px}
+.judul-tengah{text-align:center;font-weight:500;letter-spacing:.3px;margin-bottom:14px}
 
-.card-promo-responsive img {
-  width: 100%;
-  height: 180px; /* Tinggi banner di HP supaya pas dan tidak gepeng */
-  object-fit: cover;
-  display: block;
-}
+/* Baris logo merek (bisa digeser ke samping) */
+.blok-merek{padding-top:16px}
+.merek-list{list-style:none;margin:0;padding:4px 2px;display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.merek-list::-webkit-scrollbar{display:none}
+.merek-item{flex:0 0 auto;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;min-width:96px;height:56px;padding:0 16px;border:1px solid var(--garis);border-radius:12px;background:#fff;color:#111827;font-size:14px;font-weight:700;letter-spacing:.02em}
+.merek-item img{display:block;height:28px;width:auto;max-width:84px;object-fit:contain}
+.merek-item img + span{display:none}
 
-/* Khusus untuk Laptop / Layar Besar */
-@media (min-width: 769px) {
-  .card-promo-responsive {
-    min-width: calc(50% - 10px);
-    flex: 0 0 calc(50% - 10px);
-    border-radius: 18px;
-  }
-  .card-promo-responsive img {
-    height: 320px; /* Tinggi banner di laptop */
-  }
+/* Galeri toko + daftar promo: gambar tampil utuh dengan tinggi mengikuti gambar */
+.galeri,.promo-list{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;max-width:640px;margin:0 auto;align-items:start}
+.galeri-item,.promo-item{position:relative;min-width:0;margin:0;overflow:hidden;border:1px solid var(--garis);border-radius:var(--r);background:var(--surface-2)}
+.galeri-item img,.promo-item img{display:block;width:100%;height:auto}
+.galeri-kosong{aspect-ratio:16/9;display:grid;place-items:center}
+.galeri-kosong img{width:64px;opacity:.5}
+.galeri-item figcaption{position:absolute;left:0;right:0;bottom:0;padding:22px 14px 12px;font-size:13px;font-weight:500;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.6))}
+
+@media (min-width:900px){
+  html[data-device="desktop"] .blok{padding-top:48px}
+  html[data-device="desktop"] .blok-merek{padding-top:24px}
+  html[data-device="desktop"] .judul-tengah{margin-bottom:20px}
+  html[data-device="desktop"] .merek-list{justify-content:center;flex-wrap:wrap;overflow:visible}
+  html[data-device="desktop"] .galeri,
+  html[data-device="desktop"] .promo-list{grid-template-columns:repeat(2,minmax(0,1fr));max-width:1100px;gap:14px}
 }
+@media (prefers-reduced-motion:reduce){.galeri-item img{transition:none}}
