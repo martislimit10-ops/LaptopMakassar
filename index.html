@@ -113,6 +113,13 @@
     <section id="lokasi" class="blok">
       <div class="wadah">
         <h2 class="judul">Kunjungi toko kami</h2>
+        <!-- Kontainer tersembunyi agar JS tidak crash -->
+        <div style="display:none;">
+          <div id="tokoSlider"><div id="tokoTrack"></div><div id="tokoDots"></div></div>
+          <p data-fill="alamat"></p>
+          <p data-fill="jam"></p>
+          <iframe id="peta"></iframe>
+        </div>
       </div>
     </section>
   </main>
