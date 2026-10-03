@@ -258,13 +258,55 @@ html[data-device="hp"] .dlg{margin:auto auto 0;width:min(100%,var(--kolom));max-
 .toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,20px);z-index:200;max-width:calc(100% - 32px);padding:10px 16px;border-radius:10px;background:var(--aksen);color:var(--aksen-ink);font-size:14px;opacity:0;pointer-events:none;transition:.25s}
 .toast.tampil{opacity:1;transform:translate(-50%,0)}
 
-@media (min-width:900px){
-  html[data-device="desktop"] .blok{padding-top:16px}
-  html[data-device="desktop"] .blok-merek{padding-top:12px}
-  html[data-device="desktop"] .judul-tengah{margin-bottom:20px}
-  html[data-device="desktop"] .merek-list{display:flex;justify-content:center;flex-wrap:wrap;overflow:visible;gap:14px;max-width:1100px;margin:0 auto}
-  html[data-device="desktop"] .merek-item{min-width:150px;height:84px}
-  html[data-device="desktop"] .merek-item img{height:46px;max-width:120px}
+
+
+  @media (min-width: 900px) {
+  html[data-device="desktop"] .galeri {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+    max-width: 1100px !important;
+    margin: 0 auto !important;
+  }
+
+  html[data-device="desktop"] .galeri-item {
+    aspect-ratio: 3 / 4 !important;
+    height: auto !important;
+  }
+
+  html[data-device="desktop"] .galeri-item img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+@media (min-width: 900px) {
+  html[data-device="desktop"] .galeri {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+    max-width: 1100px !important;
+    margin: 0 auto !important;
+  }
+
+  html[data-device="desktop"] .galeri-item {
+    aspect-ratio: 3 / 4 !important;
+    height: auto !important;
+  }
+
+  html[data-device="desktop"] .galeri-item img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+
+  /* Menghilangkan kotak kosong */
+  html[data-device="desktop"] .galeri-item:empty,
+  html[data-device="desktop"] .galeri-kosong {
+    display: none !important;
+  }
+}
+
+  
 
   /* [KUNCI UKURAN LAPTOP] Samakan persis seperti layout HP (1 kolom di tengah dengan lebar maks 480px) */
   html[data-device="desktop"] .galeri{
@@ -359,7 +401,9 @@ html[data-device="desktop"] .dlg-chat{margin-top:auto}
 .merek-item img + span{display:none}
 
 /* Galeri toko + daftar promo: gambar tampil utuh dengan tinggi mengikuti gambar */
-galeri{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;margin:0 -16px;align-items:start}
+/* Galeri toko + daftar promo: diatur jadi 2 kolom (kiri-kanan) dan diperkecil ukurannya */
+.galeri{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:12px;margin:0 auto;max-width:900px;align-items:start}
+.galeri-item img, .promo-item img{max-height: 380px; object-fit: contain; margin: 0 auto;}
   galeri-item{border-radius:0;border-left:0;border-right:0}
   galeri-item,promo-item{position:relative;min-width:0;margin:0;overflow:hidden;border:1px solid var(--garis)}
   galeri-item img,promo-item img{display:block;width:100%;height:auto}
