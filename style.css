@@ -343,11 +343,12 @@ html[data-device="desktop"] .dlg-chat{margin-top:auto}
    HP: 1 kolom, lebar penuh, gambar utuh (tidak dipotong), jarak rapat
    Laptop: 2 kolom
    ===================================================================== */
-.blok{padding-top:28px}
+.blok{padding-top:8px}
 .judul-tengah{text-align:center;font-weight:500;letter-spacing:.3px;margin-bottom:14px}
 
 /* Baris logo merek (bisa digeser ke samping) */
-.blok-merek{padding-top:16px}
+.blok-merek{padding-top:8px}
+.foot{margin-top:16px}
 .merek-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .merek-list::-webkit-scrollbar{display:none}
 .merek-item{display:flex;align-items:center;justify-content:center;min-width:0;height:72px;padding:0 12px;border:1px solid var(--garis);border-radius:12px;background:#fff;color:#111827;font-size:16px;font-weight:700;letter-spacing:.02em}
@@ -359,7 +360,9 @@ html[data-device="desktop"] .dlg-chat{margin-top:auto}
 .galeri-item{border-radius:0;border-left:0;border-right:0}
 .galeri-item,.promo-item{position:relative;min-width:0;margin:0;overflow:hidden;border:1px solid var(--garis);border-radius:var(--r);background:var(--surface-2)}
 .galeri-item img,.promo-item img{display:block;width:100%;height:auto}
-.galeri-kosong{aspect-ratio:4/3;display:grid;place-items:center}
+.galeri-kosong{aspect-ratio:3/4;display:grid;place-items:center}
+.galeri-item img{max-height:calc(var(--vh100,100svh) - 110px);object-fit:contain}
+.galeri-item.galeri-kosong img{width:64px;height:auto;max-height:none}
 .galeri-kosong img,.promo-kosong img{width:64px;opacity:.5}
 .promo-wrap{position:relative;margin:0 -16px}
 .promo-list{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;align-items:flex-start}
@@ -373,8 +376,10 @@ html[data-device="desktop"] .dlg-chat{margin-top:auto}
 .galeri-item figcaption{position:absolute;left:0;right:0;bottom:0;padding:22px 14px 12px;font-size:13px;font-weight:500;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.6))}
 
 @media (min-width:900px){
-  html[data-device="desktop"] .blok{padding-top:48px}
-  html[data-device="desktop"] .blok-merek{padding-top:24px}
+  html[data-device="desktop"] .blok{padding-top:16px}
+  html[data-device="desktop"] .blok-merek{padding-top:12px}
+  html[data-device="desktop"] .galeri-kosong{aspect-ratio:1/1}
+  html[data-device="desktop"] .galeri-kosong:last-child:nth-child(odd){aspect-ratio:16/9}
   html[data-device="desktop"] .judul-tengah{margin-bottom:20px}
   html[data-device="desktop"] .merek-list{display:flex;justify-content:center;flex-wrap:wrap;overflow:visible;gap:14px;max-width:1100px;margin:0 auto}
   html[data-device="desktop"] .merek-item{min-width:150px;height:84px}
@@ -389,8 +394,22 @@ html[data-device="desktop"] .dlg-chat{margin-top:auto}
 }
 .galeri-item:last-child:nth-child(odd){grid-column:1/-1}
 @media (prefers-reduced-motion:reduce){.galeri-item img{transition:none}}
+<<<<<<< HEAD
 #lokasi .judul-kanan {
   text-align: right !important;
   width: 100%;
   display: block;
 }
+=======
+
+/* [PATCH-HEADER-TENGAH] HP: logo + nama tepat di tengah (kolom kiri dan kanan sama lebar), sedikit lebih kecil */
+html[data-device="hp"] .hdr-in{display:grid;grid-template-columns:1fr auto 1fr;justify-content:normal}
+html[data-device="hp"] .hdr-in > .ikon{justify-self:start}
+html[data-device="hp"] .hdr-kanan{justify-self:end}
+html[data-device="hp"] .brand{position:static;left:auto;transform:none;justify-self:center;gap:6px;font-size:14px}
+html[data-device="hp"] .brand img{width:24px;height:24px}
+/* Sembunyikan tombol promo duplikat */
+.promo-btn {
+  display: none !important;
+}
+>>>>>>> 4e4a674ec5d0f6609d9a8a83d4cde508f967b315
