@@ -40,9 +40,11 @@ $$('dialog.dlg').forEach(d => {
 let timerToast;
 function toast(teks) {
   const t = $('#toast');
-  t.textContent = teks; t.classList.add('tampil');
-  clearTimeout(timerToast);
-  timerToast = setTimeout(() => t.classList.remove('tampil'), 2200);
+  if (t) {
+    t.textContent = teks; t.classList.add('tampil');
+    clearTimeout(timerToast);
+    timerToast = setTimeout(() => t.classList.remove('tampil'), 2200);
+  }
 }
 function gulirKe(sel) {
   const el = $(sel);
@@ -56,9 +58,10 @@ function tautanSosmed(nilai, dasar) {
 }
 const handle = v => '@' + String(v || '').trim().replace(/^https?:\/\/[^/]+\/@?/i, '').replace(/^@/, '').replace(/\/$/, '');
 
-$('#tahun').textContent = new Date().getFullYear();
+const elTahun = $('#tahun');
+if (elTahun) elTahun.textContent = new Date().getFullYear();
 
-/* ---------- 2. Info toko ---------- */
+/* ---------- 2. Info toko (AMAN dari Error Elemen Hilang) ---------- */
 function terapkanConfig() {
   $$('[data-fill]').forEach(el => { el.textContent = CONFIG[el.dataset.fill] ?? ''; });
   $$('[data-wa]').forEach(a => { a.href = waLink(CONFIG.pesan_umum); });
@@ -68,9 +71,13 @@ function terapkanConfig() {
   $$('[data-tt-text]').forEach(s => { s.textContent = handle(CONFIG.tiktok); });
   $$('[data-maps]').forEach(a => { a.href = CONFIG.maps_link; });
   $$('[data-mail]').forEach(a => { a.href = CONFIG.email ? 'mailto:' + CONFIG.email : '#'; a.hidden = !CONFIG.email; });
+  
   const peta = $('#peta');
-  if (peta && CONFIG.peta_embed_url && peta.getAttribute('src') !== CONFIG.peta_embed_url) peta.src = CONFIG.peta_embed_url;
-  if (peta) peta.closest('.peta').hidden = !CONFIG.peta_embed_url;
+  if (peta) {
+    if (CONFIG.peta_embed_url && peta.getAttribute('src') !== CONFIG.peta_embed_url) peta.src = CONFIG.peta_embed_url;
+    const pembungkusPeta = peta.closest('.peta');
+    if (pembungkusPeta) pembungkusPeta.hidden = !CONFIG.peta_embed_url;
+  }
 }
 
 /* ---------- 3. Tema & sidebar ---------- */
@@ -78,42 +85,48 @@ const saklar = $('#saklarTema');
 function setTema(gelap, simpan = true) {
   document.documentElement.toggleAttribute('data-tema', gelap);
   if (gelap) document.documentElement.setAttribute('data-tema', 'gelap');
-  saklar.setAttribute('aria-checked', String(gelap));
-  $('meta[name="theme-color"]').content = gelap ? '#0f1115' : '#fafafa';
+  if (saklar) saklar.setAttribute('aria-checked', String(gelap));
+  const metaTheme = $('meta[name="theme-color"]');
+  if (metaTheme) metaTheme.content = gelap ? '#0f1115' : '#fafafa';
   if (simpan) { try { localStorage.setItem('lm_tema', gelap ? 'gelap' : 'terang'); } catch (e) {} }
 }
 setTema(document.documentElement.getAttribute('data-tema') === 'gelap', false);
-saklar.addEventListener('click', () => setTema(saklar.getAttribute('aria-checked') !== 'true'));
+if (saklar) saklar.addEventListener('click', () => setTema(saklar.getAttribute('aria-checked') !== 'true'));
 
 const sidebar = $('#sidebar'), scrim = $('#scrim'), btnMenu = $('#btnMenu');
 function bukaSidebar() {
-  scrim.hidden = false;
+  if (!sidebar) return;
+  if (scrim) scrim.hidden = false;
   sidebar.removeAttribute('inert'); sidebar.setAttribute('aria-hidden', 'false');
   requestAnimationFrame(() => sidebar.classList.add('buka'));
-  btnMenu.setAttribute('aria-expanded', 'true');
+  if (btnMenu) btnMenu.setAttribute('aria-expanded', 'true');
   kunci(true);
-  $('#btnTutupMenu').focus();
+  const btnTutup = $('#btnTutupMenu');
+  if (btnTutup) btnTutup.focus();
 }
 function tutupSidebar(fokus = true) {
-  if (!sidebar.classList.contains('buka')) return;
-  sidebar.classList.remove('buka'); scrim.hidden = true;
+  if (!sidebar || !sidebar.classList.contains('buka')) return;
+  sidebar.classList.remove('buka'); if (scrim) scrim.hidden = true;
   sidebar.setAttribute('inert', ''); sidebar.setAttribute('aria-hidden', 'true');
-  btnMenu.setAttribute('aria-expanded', 'false');
+  if (btnMenu) btnMenu.setAttribute('aria-expanded', 'false');
   kunci(false);
-  if (fokus) btnMenu.focus();
+  if (fokus && btnMenu) btnMenu.focus();
 }
-btnMenu.addEventListener('click', bukaSidebar);
-$('#btnTutupMenu').addEventListener('click', () => tutupSidebar());
-scrim.addEventListener('click', () => tutupSidebar());
-sidebar.addEventListener('click', e => {
-  const go = e.target.closest('[data-goto]');
-  if (go) { e.preventDefault(); tutupSidebar(false); gulirKe(go.dataset.goto); }
-  else if (e.target.closest('a[target="_blank"]')) tutupSidebar(false);
-});
+if (btnMenu) btnMenu.addEventListener('click', bukaSidebar);
+const btnTutupMenu = $('#btnTutupMenu');
+if (btnTutupMenu) btnTutupMenu.addEventListener('click', () => tutupSidebar());
+if (scrim) scrim.addEventListener('click', () => tutupSidebar());
+if (sidebar) {
+  sidebar.addEventListener('click', e => {
+    const go = e.target.closest('[data-goto]');
+    if (go) { e.preventDefault(); tutupSidebar(false); gulirKe(go.dataset.goto); }
+    else if (e.target.closest('a[target="_blank"]')) tutupSidebar(false);
+  });
+}
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
-  if (sidebar.classList.contains('buka')) tutupSidebar();
-  else if (!storePage.hidden && !document.querySelector('dialog[open]')) tutupToko();
+  if (sidebar && sidebar.classList.contains('buka')) tutupSidebar();
+  else if (storePage && !storePage.hidden && !document.querySelector('dialog[open]')) tutupToko();
 });
 
 /* ---------- 4. Hero slider (foto + video) ---------- */
@@ -129,15 +142,20 @@ function daftarHero() {
   return l;
 }
 function renderHero() {
+  if (!heroTrack) return;
   const l = daftarHero();
   const sig = JSON.stringify(l.map(b => [b.id, b.url, b.jenis, b.judul, b.urutan]));
   if (sig === hero.sig) return;
   hero.sig = sig; hero.slides = l; hero.idx = 0; hero.jeda = false;
   clearTimeout(hero.timer);
 
+  const heroNav = $('#heroNav'), heroKontrol = $('#heroKontrol'), heroCap = $('#heroCap');
+
   if (!l.length) {
     heroTrack.innerHTML = `<div class="hero-slide"><div class="hero-kosong"><b>Laptop Makassar</b><span>Laptop baru dan bekas berkualitas</span></div></div>`;
-    $('#heroNav').hidden = true; $('#heroKontrol').hidden = true; $('#heroCap').textContent = '';
+    if (heroNav) heroNav.hidden = true; 
+    if (heroKontrol) heroKontrol.hidden = true; 
+    if (heroCap) heroCap.textContent = '';
     return;
   }
   heroTrack.innerHTML = l.map((b, i) => `<div class="hero-slide" aria-hidden="${i !== 0}">` + (b.jenis === 'video'
@@ -145,43 +163,46 @@ function renderHero() {
     : `<img src="${esc(b.url)}" alt="${esc(b.judul || 'Promo Laptop Makassar')}" ${i === 0 ? '' : 'loading="lazy"'} ${fotoErr}>`) + `</div>`).join('');
   $$('video', heroTrack).forEach((v, i) => {
     v.addEventListener('ended', () => { if (hero.slides.length > 1) heroKe(hero.idx + 1); });
-    v.addEventListener('error', () => { if (hero.slides[hero.idx] && heroTrack.children[hero.idx].contains(v)) jadwalkanHero(6000); });
+    v.addEventListener('error', () => { if (hero.slides[hero.idx] && heroTrack.children[hero.idx]?.contains(v)) jadwalkanHero(6000); });
   });
-  $('#heroBars').innerHTML = l.map((_, i) => `<button type="button" aria-label="Slide ${i + 1}" data-i="${i}"></button>`).join('');
-  $('#heroNav').hidden = l.length < 2;
+  const heroBars = $('#heroBars');
+  if (heroBars) heroBars.innerHTML = l.map((_, i) => `<button type="button" aria-label="Slide ${i + 1}" data-i="${i}"></button>`).join('');
+  if (heroNav) heroNav.hidden = l.length < 2;
   heroKe(0, true);
 }
 function slideAktif() { return hero.slides[hero.idx]; }
-function videoAktif() { return heroTrack.children[hero.idx]?.querySelector('video') || null; }
+function videoAktif() { return heroTrack?.children[hero.idx]?.querySelector('video') || null; }
 function jadwalkanHero(ms) {
   clearTimeout(hero.timer);
   if (hero.slides.length < 2 || hero.ditahan || hero.jeda) return;
   hero.timer = setTimeout(() => heroKe(hero.idx + 1), ms);
 }
 function heroKe(i, awal = false) {
-  const n = hero.slides.length; if (!n) return;
+  const n = hero.slides.length; if (!n || !heroTrack) return;
   if (!awal) hero.jeda = false;
   hero.idx = ((i % n) + n) % n;
   heroTrack.style.transform = `translateX(-${hero.idx * 100}%)`;
-  $$('.hero-slide', heroTrack).forEach((s, k) => s.setAttribute('aria-hidden', String(k !== hero.idx)));
-  $$('#heroBars button').forEach((b, k) => b.setAttribute('aria-current', String(k === hero.idx)));
+  $$('.hero-slide', heroTrack).forEach((s, k) => s.setAttribute('aria-hidden', String(k !== hero.idx)));$$
+('#heroBars button').forEach((b, k) => b.setAttribute('aria-current', String(k === hero.idx)));
   const s = slideAktif();
-  $('#heroCap').textContent = s.judul || '';
-  /* kontrol jeda/suara HANYA untuk slide video; slide foto tanpa kontrol */
-  $('#heroKontrol').hidden = s.jenis !== 'video';
-  $$('video', heroTrack).forEach(v => { v.pause(); v.currentTime = 0; v.muted = !hero.suara; });
+  const heroCap = $('#heroCap'), heroKontrol = $('#heroKontrol');   if (heroCap) heroCap.textContent = s ? (s.judul \vert{}\vert{} '') : '';   if (heroKontrol) heroKontrol.hidden = !s \vert{}\vert{} s.jenis !== 'video';   $$('video', heroTrack).forEach(v => { v.pause(); v.currentTime = 0; v.muted = !hero.suara; });
   perbaruiIkonHero();
   clearTimeout(hero.timer);
-  if (s.jenis === 'video') {
+  if (s && s.jenis === 'video') {
     const v = videoAktif();
     if (v && !hero.ditahan) v.play().catch(() => jadwalkanHero(6000));
   } else jadwalkanHero(5500);
 }
 function perbaruiIkonHero() {
-  $('#heroJeda').innerHTML = IKON(hero.jeda ? 'i-play' : 'i-pause');
-  $('#heroJeda').setAttribute('aria-label', hero.jeda ? 'Putar video' : 'Jeda video');
-  $('#heroSuara').innerHTML = IKON(hero.suara ? 'i-vol' : 'i-mute');
-  $('#heroSuara').setAttribute('aria-label', hero.suara ? 'Matikan suara' : 'Nyalakan suara');
+  const elJeda = $('#heroJeda'), elSuara = $('#heroSuara');
+  if (elJeda) {
+    elJeda.innerHTML = IKON(hero.jeda ? 'i-play' : 'i-pause');
+    elJeda.setAttribute('aria-label', hero.jeda ? 'Putar video' : 'Jeda video');
+  }
+  if (elSuara) {
+    elSuara.innerHTML = IKON(hero.suara ? 'i-vol' : 'i-mute');
+    elSuara.setAttribute('aria-label', hero.suara ? 'Matikan suara' : 'Nyalakan suara');
+  }
 }
 function heroTahan(ya) {
   hero.ditahan = ya;
@@ -192,25 +213,18 @@ function heroTahan(ya) {
     else if (slideAktif().jenis !== 'video') jadwalkanHero(5500);
   }
 }
-$('#heroJeda').addEventListener('click', () => {
-  const v = videoAktif(); if (!v) return;
-  hero.jeda = !hero.jeda;
-  if (hero.jeda) v.pause(); else v.play().catch(() => {});
+const btnJeda = $('#heroJeda'), btnSuara = $('#heroSuara'), btnPrev = $('#heroPrev'), btnNext = $('#heroNext'), elBars = $('#heroBars'); if (btnJeda) btnJeda.addEventListener('click', () => {   const v = videoAktif(); if (!v) return;   hero.jeda = !hero.jeda;   if (hero.jeda) v.pause(); else v.play().catch(() => {});   perbaruiIkonHero(); }); if (btnSuara) btnSuara.addEventListener('click', () => {   hero.suara = !hero.suara;   $$('video', heroTrack).forEach(v => { v.muted = !hero.suara; });
   perbaruiIkonHero();
 });
-$('#heroSuara').addEventListener('click', () => {
-  hero.suara = !hero.suara;
-  $$('video', heroTrack).forEach(v => { v.muted = !hero.suara; });
-  perbaruiIkonHero();
-});
-$('#heroPrev').addEventListener('click', () => heroKe(hero.idx - 1));
-$('#heroNext').addEventListener('click', () => heroKe(hero.idx + 1));
-$('#heroBars').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) heroKe(+b.dataset.i); });
-pasangGeser(heroEl, d => heroKe(hero.idx + d));
-document.addEventListener('visibilitychange', () => heroTahan(document.hidden || !storePage.hidden));
+if (btnPrev) btnPrev.addEventListener('click', () => heroKe(hero.idx - 1));
+if (btnNext) btnNext.addEventListener('click', () => heroKe(hero.idx + 1));
+if (elBars) elBars.addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) heroKe(+b.dataset.i); });
+if (heroEl) pasangGeser(heroEl, d => heroKe(hero.idx + d));
+document.addEventListener('visibilitychange', () => heroTahan(document.hidden || (storePage && !storePage.hidden)));
 
 /* Geser jari/mouse kiri-kanan */
 function pasangGeser(el, aksi) {
+  if (!el) return;
   let x0 = null, y0 = 0;
   el.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; x0 = e.clientX; y0 = e.clientY; });
   el.addEventListener('pointerup', e => {
@@ -221,36 +235,41 @@ function pasangGeser(el, aksi) {
   el.addEventListener('pointercancel', () => { x0 = null; });
 }
 
-/* ---------- 5. Slider foto "Kunjungi toko kami" (maks. 5) ---------- */
+/* ---------- 5. Slider foto "Kunjungi toko kami" (AMAN) ---------- */
 const toko = { fotos: [], idx: 0, timer: null, sig: '' };
 function renderSliderToko() {
+  const root = $('#tokoSlider'), track = $('#tokoTrack');
+  if (!root || !track) return;
   const l = BANNER.filter(b => b.bagian === 'toko' && b.jenis === 'foto').slice(0, 5);
   const sig = JSON.stringify(l.map(b => [b.id, b.url, b.judul, b.urutan]));
   if (sig === toko.sig) return;
   toko.sig = sig; toko.fotos = l; toko.idx = 0;
-  const root = $('#tokoSlider');
+  const dots = $('#tokoDots');
   if (!l.length) {
-    $('#tokoTrack').innerHTML = `<div><img src="images/img-01.jpg" alt="Tampak depan toko Laptop Makassar" ${fotoErr}></div>`;
-    $('#tokoDots').innerHTML = ''; $$('.tslider-prev,.tslider-next', root).forEach(b => b.hidden = true);
+    track.innerHTML = `<div><img src="images/img-01.jpg" alt="Tampak depan toko Laptop Makassar" ${fotoErr}></div>`;
+    if (dots) dots.innerHTML = ''; 
+    $$('.tslider-prev,.tslider-next', root).forEach(b => b.hidden = true);
     clearTimeout(toko.timer); return;
   }
-  $('#tokoTrack').innerHTML = l.map((b, i) => `<div><img src="${esc(b.url)}" alt="${esc(b.judul || 'Foto toko Laptop Makassar')}" ${i ? 'loading="lazy"' : ''} ${fotoErr}></div>`).join('');
-  $('#tokoDots').innerHTML = l.length > 1 ? l.map((_, i) => `<button type="button" aria-label="Foto ${i + 1}" data-i="${i}"></button>`).join('') : '';
+  track.innerHTML = l.map((b, i) => `<div><img src="${esc(b.url)}" alt="${esc(b.judul || 'Foto toko Laptop Makassar')}" ${i ? 'loading="lazy"' : ''} ${fotoErr}></div>`).join('');
+  if (dots) dots.innerHTML = l.length > 1 ? l.map((_, i) => `<button type="button" aria-label="Foto ${i + 1}" data-i="${i}"></button>`).join('') : '';
   $$('.tslider-prev,.tslider-next', root).forEach(b => b.hidden = l.length < 2);
   tokoKe(0);
 }
 function tokoKe(i) {
-  const n = toko.fotos.length; if (!n) return;
+  const track = $('#tokoTrack');
+  const n = toko.fotos.length; if (!n || !track) return;
   toko.idx = ((i % n) + n) % n;
-  $('#tokoTrack').style.transform = `translateX(-${toko.idx * 100}%)`;
+  track.style.transform = `translateX(-${toko.idx * 100}%)`;
   $$('#tokoDots button').forEach((b, k) => b.setAttribute('aria-current', String(k === toko.idx)));
   clearTimeout(toko.timer);
   if (n > 1 && !kurangGerak()) toko.timer = setTimeout(() => tokoKe(toko.idx + 1), 5000);
 }
-$('#tokoSlider .tslider-prev').addEventListener('click', () => tokoKe(toko.idx - 1));
-$('#tokoSlider .tslider-next').addEventListener('click', () => tokoKe(toko.idx + 1));
-$('#tokoDots').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) tokoKe(+b.dataset.i); });
-pasangGeser($('#tokoSlider'), d => tokoKe(toko.idx + d));
+const btnTokoPrev = $('#tokoSlider .tslider-prev'), btnTokoNext = $('#tokoSlider .tslider-next'), elTokoDots = $('#tokoDots'), elTokoSlider = $('#tokoSlider');
+if (btnTokoPrev) btnTokoPrev.addEventListener('click', () => tokoKe(toko.idx - 1));
+if (btnTokoNext) btnTokoNext.addEventListener('click', () => tokoKe(toko.idx + 1));
+if (elTokoDots) elTokoDots.addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) tokoKe(+b.dataset.i); });
+if (elTokoSlider) pasangGeser(elTokoSlider, d => tokoKe(toko.idx + d));
 
 /* ---------- 6. Halaman Toko (#toko) ---------- */
 const storePage = $('#storePage'), storeSelect = $('#storeKategori'), storeCari = $('#storeCari');
@@ -258,10 +277,12 @@ const state = { mode: 'all', key: null, q: '', semua: false };
 let tokoDariDalam = false;
 
 function sinkronToko() {
+  if (!storePage) return;
   const buka = location.hash === '#toko';
   if (storePage.hidden !== buka) return;
   storePage.hidden = !buka;
-  $('#app').inert = buka;
+  const app = $('#app');
+  if (app) app.inert = buka;
   heroTahan(buka);
   if (buka) storePage.scrollTop = 0;
 }
@@ -274,21 +295,23 @@ function tutupToko() {
   else { history.replaceState(null, '', location.pathname + location.search); sinkronToko(); }
 }
 window.addEventListener('hashchange', sinkronToko);
-$('#btnToko').addEventListener('click', bukaToko);
-$('#storeBack').addEventListener('click', tutupToko);
-$$('a[href="#toko"]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); bukaToko(); }));
+const btnToko = $('#btnToko'), storeBack = $('#storeBack'); if (btnToko) btnToko.addEventListener('click', bukaToko); if (storeBack) storeBack.addEventListener('click', tutupToko); $$('a[href="#toko"]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); bukaToko(); }));
 
-storeSelect.innerHTML =
-  '<option value="all">Semua laptop</option>' +
-  '<optgroup label="Kategori">' + KATEGORI.map(k => `<option value="kategori:${k.id}">${esc(k.label)}</option>`).join('') + '</optgroup>' +
-  '<optgroup label="Label">' + Object.entries(LABEL_TAG).map(([id, t]) => `<option value="tag:${id}">${esc(t)}</option>`).join('') + '</optgroup>';
-storeSelect.addEventListener('change', () => {
-  const v = storeSelect.value;
-  if (v === 'all') { state.mode = 'all'; state.key = null; }
-  else { const [m, k] = v.split(':'); state.mode = m; state.key = k; }
-  state.semua = false; renderKatalog(); 
-});
-storeCari.addEventListener('input', () => { state.q = storeCari.value.trim(); state.semua = false; renderKatalog(); });
+if (storeSelect) {
+  storeSelect.innerHTML =
+    '<option value="all">Semua laptop</option>' +
+    '<optgroup label="Kategori">' + KATEGORI.map(k => `<option value="kategori:${k.id}">${esc(k.label)}</option>`).join('') + '</optgroup>' +
+    '<optgroup label="Label">' + Object.entries(LABEL_TAG).map(([id, t]) => `<option value="tag:${id}">${esc(t)}</option>`).join('') + '</optgroup>';
+  storeSelect.addEventListener('change', () => {
+    const v = storeSelect.value;
+    if (v === 'all') { state.mode = 'all'; state.key = null; }
+    else { const [m, k] = v.split(':'); state.mode = m; state.key = k; }
+    state.semua = false; renderKatalog(); 
+  });
+}
+if (storeCari) {
+  storeCari.addEventListener('input', () => { state.q = storeCari.value.trim(); state.semua = false; renderKatalog(); });
+}
 
 function daftarTerfilter() {
   let l = PRODUK;
@@ -335,35 +358,43 @@ function kartuProduk(p) {
 }
 let sedangMemuat = true, gagalMemuat = false;
 function renderKatalog() {
+  const elStatus = $('#status'), elGrid = $('#grid'), elMore = $('#more');
+  if (!elGrid) return;
   const semua = daftarTerfilter();
   const tampil = state.semua ? semua : semua.slice(0, PAGE);
-  $('#status').textContent = sedangMemuat ? 'Memuat katalog...'
-    : gagalMemuat && !PRODUK.length ? 'Katalog belum bisa dimuat.'
-    : semua.length ? `Menampilkan ${tampil.length} dari ${semua.length} laptop` : 'Belum ada laptop yang cocok';
+  if (elStatus) {
+    elStatus.textContent = sedangMemuat ? 'Memuat katalog...'
+      : gagalMemuat && !PRODUK.length ? 'Katalog belum bisa dimuat.'
+      : semua.length ? `Menampilkan ${tampil.length} dari ${semua.length} laptop` : 'Belum ada laptop yang cocok';
+  }
 
   if (sedangMemuat) {
-    $('#grid').innerHTML = Array.from({ length: 4 }, () => '<div class="skel"></div>').join('');
-    $('#more').innerHTML = '';
+    elGrid.innerHTML = Array.from({ length: 4 }, () => '<div class="skel"></div>').join('');
+    if (elMore) elMore.innerHTML = '';
   } else if (gagalMemuat && !PRODUK.length) {
-    $('#grid').innerHTML = `<div class="kosong"><p><b>Data laptop belum bisa dimuat.</b></p><p>Periksa koneksi internet, lalu coba lagi.</p><button type="button" class="btn" id="ulangMuat">Muat ulang</button></div>`;
-    $('#more').innerHTML = '';
+    elGrid.innerHTML = `<div class="kosong"><p><b>Data laptop belum bisa dimuat.</b></p><p>Periksa koneksi internet, lalu coba lagi.</p><button type="button" class="btn" id="ulangMuat">Muat ulang</button></div>`;
+    if (elMore) elMore.innerHTML = '';
   } else {
-    $('#grid').innerHTML = tampil.length ? tampil.map(kartuProduk).join('')
+    elGrid.innerHTML = tampil.length ? tampil.map(kartuProduk).join('')
       : `<div class="kosong"><p><b>Belum ada unit untuk pilihan ini.</b></p><p>Stok kami bergerak cepat. Tanyakan ketersediaannya lewat WhatsApp.</p><a class="btn" data-wa target="_blank" rel="noopener" href="${waLink(CONFIG.pesan_umum)}">Tanya via WhatsApp</a></div>`;
-    /* Hanya SATU tombol "Lainnya": dibuat ulang tiap render, tidak pernah dobel */
-    $('#more').innerHTML = (!state.semua && semua.length > PAGE) ? `<button type="button" id="moreBtn" class="btn btn-garis">Lainnya (${semua.length - PAGE} lagi)</button>` : '';
+    if (elMore) elMore.innerHTML = (!state.semua && semua.length > PAGE) ? `<button type="button" id="moreBtn" class="btn btn-garis">Lainnya (${semua.length - PAGE} lagi)</button>` : '';
   }
 }
-$('#more').addEventListener('click', e => {
-  if (!e.target.closest('#moreBtn')) return;
-  state.semua = true; renderKatalog();
-  const k = $('#grid').children[PAGE]; if (k) k.querySelector('button').focus();
-});
-$('#grid').addEventListener('click', e => {
-  if (e.target.closest('#ulangMuat')) { muatSemua(); return; }
-  const t = e.target.closest('[data-tambah]'); if (t) { tambahKeranjang(t.dataset.tambah); return; }
-  const o = e.target.closest('[data-open]'); if (o) bukaDetail(o.dataset.open);
-});
+const elMoreBox = $('#more'), elGridBox = $('#grid');
+if (elMoreBox) {
+  elMoreBox.addEventListener('click', e => {
+    if (!e.target.closest('#moreBtn')) return;
+    state.semua = true; renderKatalog();
+    const k = $('#grid')?.children[PAGE]; if (k) k.querySelector('button')?.focus();
+  });
+}
+if (elGridBox) {
+  elGridBox.addEventListener('click', e => {
+    if (e.target.closest('#ulangMuat')) { muatSemua(); return; }
+    const t = e.target.closest('[data-tambah]'); if (t) { tambahKeranjang(t.dataset.tambah); return; }
+    const o = e.target.closest('[data-open]'); if (o) bukaDetail(o.dataset.open);
+  });
+}
 
 /* ---------- 7. Keranjang (disimpan di perangkat pembeli) ---------- */
 let KERANJANG = (() => { try { const k = JSON.parse(localStorage.getItem(KEY_KERANJANG) || '[]'); return Array.isArray(k) ? k.filter(x => x && x.id) : []; } catch (e) { return []; } })();
@@ -396,84 +427,99 @@ function renderKeranjang() {
   const jumlah = l.reduce((s, x) => s + x.qty, 0);
   const total = l.reduce((s, x) => s + x.p.harga * x.qty, 0);
   $$('[data-badge]').forEach(b => { b.textContent = jumlah; b.hidden = !jumlah; });
-  $('#cartbar').hidden = !jumlah;
-  $('#cbJumlah').textContent = `${jumlah} item`;
-  $('#cbTotal').textContent = rupiah(total);
-  $('#krTotal').textContent = rupiah(total);
-  $('#krFoot').hidden = !l.length;
-  $('#btnCheckout').href = l.length ? waLink(pesanCheckout()) : '#';
-  $('#krIsi').innerHTML = l.length ? l.map(({ p, qty }) => `
-    <div class="kr-item">
-      <div class="kr-foto"><img src="${esc(p.foto)}" alt="" ${fotoErr}></div>
-      <div>
-        <p class="kr-nama">${esc(namaLengkap(p))}</p>
-        <p class="kr-harga">${rupiah(p.harga)}</p>
-        <div class="kr-baris">
-          <div class="qty">
-            <button type="button" data-qty="${esc(p.id)}" data-d="-1" aria-label="Kurangi"><svg viewBox="0 0 24 24"><use href="#i-minus"/></svg></button>
-            <span aria-live="polite">${qty}</span>
-            <button type="button" data-qty="${esc(p.id)}" data-d="1" aria-label="Tambah"><svg viewBox="0 0 24 24"><use href="#i-plus"/></svg></button>
+  const cartbar = $('#cartbar'), cbJumlah = $('#cbJumlah'), cbTotal = $('#cbTotal'), krTotal = $('#krTotal'), krFoot = $('#krFoot'), btnCheckout = $('#btnCheckout'), krIsi = $('#krIsi');
+  if (cartbar) cartbar.hidden = !jumlah;
+  if (cbJumlah) cbJumlah.textContent = `${jumlah} item`;
+  if (cbTotal) cbTotal.textContent = rupiah(total);
+  if (krTotal) krTotal.textContent = rupiah(total);
+  if (krFoot) krFoot.hidden = !l.length;
+  if (btnCheckout) btnCheckout.href = l.length ? waLink(pesanCheckout()) : '#';
+  if (krIsi) {
+    krIsi.innerHTML = l.length ? l.map(({ p, qty }) => `
+      <div class="kr-item">
+        <div class="kr-foto"><img src="${esc(p.foto)}" alt="" ${fotoErr}></div>
+        <div>
+          <p class="kr-nama">${esc(namaLengkap(p))}</p>
+          <p class="kr-harga">${rupiah(p.harga)}</p>
+          <div class="kr-baris">
+            <div class="qty">
+              <button type="button" data-qty="${esc(p.id)}" data-d="-1" aria-label="Kurangi"><svg viewBox="0 0 24 24"><use href="#i-minus"/></svg></button>
+              <span aria-live="polite">${qty}</span>
+              <button type="button" data-qty="${esc(p.id)}" data-d="1" aria-label="Tambah"><svg viewBox="0 0 24 24"><use href="#i-plus"/></svg></button>
+            </div>
+            <span class="kr-sub">${rupiah(p.harga * qty)}</span>
           </div>
-          <span class="kr-sub">${rupiah(p.harga * qty)}</span>
+          <button type="button" class="kr-hapus" data-hapus="${esc(p.id)}"><svg viewBox="0 0 24 24"><use href="#i-trash"/></svg>Hapus</button>
         </div>
-        <button type="button" class="kr-hapus" data-hapus="${esc(p.id)}"><svg viewBox="0 0 24 24"><use href="#i-trash"/></svg>Hapus</button>
-      </div>
-    </div>`).join('') : '<p class="kr-kosong">Keranjang masih kosong.</p>';
+      </div>`).join('') : '<p class="kr-kosong">Keranjang masih kosong.</p>';
+  }
 }
-$('#krIsi').addEventListener('click', e => {
-  const q = e.target.closest('[data-qty]'), h = e.target.closest('[data-hapus]');
-  if (q) {
-    const it = KERANJANG.find(x => x.id === String(q.dataset.qty)); if (!it) return;
-    it.qty += +q.dataset.d;
-    if (it.qty > MAKS_QTY) { it.qty = MAKS_QTY; toast(`Maksimal ${MAKS_QTY} unit per produk`); }
-    if (it.qty < 1) KERANJANG = KERANJANG.filter(x => x !== it);
-    simpanKeranjang();
-  } else if (h) { KERANJANG = KERANJANG.filter(x => x.id !== String(h.dataset.hapus)); simpanKeranjang(); }
-});
-$('#cartbar').addEventListener('click', () => bukaDialog(keranjang));
-$('#storeKeranjang').addEventListener('click', () => bukaDialog(keranjang));
-$('#btnCheckout').addEventListener('click', e => { if (!isiKeranjang().length) e.preventDefault(); });
+const krIsiBox = $('#krIsi'), cartBarBox = $('#cartbar'), storeKrBtn = $('#storeKeranjang'), checkoutBtn = $('#btnCheckout');
+if (krIsiBox) {
+  krIsiBox.addEventListener('click', e => {
+    const q = e.target.closest('[data-qty]'), h = e.target.closest('[data-hapus]');
+    if (q) {
+      const it = KERANJANG.find(x => x.id === String(q.dataset.qty)); if (!it) return;
+      it.qty += +q.dataset.d;
+      if (it.qty > MAKS_QTY) { it.qty = MAKS_QTY; toast(`Maksimal ${MAKS_QTY} unit per produk`); }
+      if (it.qty < 1) KERANJANG = KERANJANG.filter(x => x !== it);
+      simpanKeranjang();
+    } else if (h) { KERANJANG = KERANJANG.filter(x => x.id !== String(h.dataset.hapus)); simpanKeranjang(); }
+  });
+}
+if (cartBarBox) cartBarBox.addEventListener('click', () => keranjang && bukaDialog(keranjang));
+if (storeKrBtn) storeKrBtn.addEventListener('click', () => keranjang && bukaDialog(keranjang));
+if (checkoutBtn) checkoutBtn.addEventListener('click', e => { if (!isiKeranjang().length) e.preventDefault(); });
 
 /* ---------- 8. Detail produk ---------- */
 const detail = $('#detail');
 let detailId = null;
 function bukaDetail(id) {
+  if (!detail) return;
   const p = cariProduk(id); if (!p) return;
   detailId = p.id;
   const k = KONDISI[p.kondisi] || KONDISI.bekas, sp = p.spek || {}, nama = namaLengkap(p);
   const baris = (n, v) => `<div><dt>${n}</dt><dd>${esc(v || '-')}</dd></div>`;
   const hemat = p.hargaNormal && p.hargaNormal > p.harga;
-  $('#detailBody').innerHTML = `
-  <div class="detail-grid detail">
-    <div class="detail-foto"><img src="${esc(p.foto)}" alt="${esc(nama)}" ${fotoErr}></div>
-    <div>
-      <div class="tag-baris"><span class="tag tag-gelap">${esc(k.label)}</span>${p.tags.filter(t => LABEL_TAG[t]).map(t => `<span class="tag">${esc(LABEL_TAG[t])}</span>`).join('')}</div>
-      <h3 class="detail-nama" style="margin-top:10px">${esc(nama)}</h3>
-      <p class="detail-harga">${rupiah(p.harga)}${hemat ? `<s>${rupiah(p.hargaNormal)}</s>` : ''}</p>
-      ${hemat ? `<p class="hemat">Hemat ${rupiah(p.hargaNormal - p.harga)}</p>` : ''}
-      <h3>Spesifikasi</h3>
-      <dl>${baris('Merek', p.merek)}${baris('Seri', p.seri)}${baris('Processor', sp.processor)}${baris('RAM', sp.ram)}${baris('Storage', sp.storage)}${baris('Kartu grafis (VGA)', sp.vga)}${baris('Ukuran layar', sp.layar)}</dl>
-      <h3>Kondisi unit</h3><p class="p">${esc(k.detail)}</p>
-      <h3>Kelengkapan</h3><p class="p">${esc(k.kelengkapan)}</p>
-      <h3>Garansi toko</h3><p class="p">${esc(k.garansi)}</p>
-    </div>
-  </div>`;
-  $('#detailWa').href = waLink(`Halo kak, ${nama} masih ada?`);
-  $('#detailBody').scrollTop = 0;
+  const detailBody = $('#detailBody'), detailWa = $('#detailWa');
+  if (detailBody) {
+    detailBody.innerHTML = `
+    <div class="detail-grid detail">
+      <div class="detail-foto"><img src="${esc(p.foto)}" alt="${esc(nama)}" ${fotoErr}></div>
+      <div>
+        <div class="tag-baris"><span class="tag tag-gelap">${esc(k.label)}</span>${p.tags.filter(t => LABEL_TAG[t]).map(t => `<span class="tag">${esc(LABEL_TAG[t])}</span>`).join('')}</div>
+        <h3 class="detail-nama" style="margin-top:10px">${esc(nama)}</h3>
+        <p class="detail-harga">${rupiah(p.harga)}${hemat ? `<s>${rupiah(p.hargaNormal)}</s>` : ''}</p>
+        ${hemat ? `<p class="hemat">Hemat ${rupiah(p.hargaNormal - p.harga)}</p>` : ''}
+        <h3>Spesifikasi</h3>
+        <dl>${baris('Merek', p.merek)}${baris('Seri', p.seri)}${baris('Processor', sp.processor)}${baris('RAM', sp.ram)}${baris('Storage', sp.storage)}${baris('Kartu grafis (VGA)', sp.vga)}${baris('Ukuran layar', sp.layar)}</dl>
+        <h3>Kondisi unit</h3><p class="p">${esc(k.detail)}</p>
+        <h3>Kelengkapan</h3><p class="p">${esc(k.kelengkapan)}</p>
+        <h3>Garansi toko</h3><p class="p">${esc(k.garansi)}</p>
+      </div>
+    </div>`;
+    detailBody.scrollTop = 0;
+  }
+  if (detailWa) detailWa.href = waLink(`Halo kak, ${nama} masih ada?`);
   bukaDialog(detail);
 }
-$('#detailTambah').addEventListener('click', () => { if (detailId !== null) { tambahKeranjang(detailId); detail.close(); } });
+const detailTambahBtn = $('#detailTambah');
+if (detailTambahBtn) detailTambahBtn.addEventListener('click', () => { if (detailId !== null) { tambahKeranjang(detailId); detail?.close(); } });
 
-/* ---------- 9. Pencarian AI (Gemini lewat Supabase Edge Function) ---------- */
+/* ---------- 9. Pencarian AI ---------- */
 const dialogCari = $('#cari'), cariInput = $('#cariInput'), cariHasil = $('#cariHasil');
-function bukaCari() { bukaDialog(dialogCari); setTimeout(() => cariInput.focus(), 50); }
-$('#btnCari').addEventListener('click', bukaCari);
-$('#cariContoh').addEventListener('click', e => {
-  const c = e.target.closest('.chip'); if (!c) return;
-  cariInput.value = c.textContent; jalankanCari();
-});
-$('#cariKirim').addEventListener('click', jalankanCari);
-cariInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); jalankanCari(); } });
+function bukaCari() { if (dialogCari) { bukaDialog(dialogCari); setTimeout(() => cariInput?.focus(), 50); } }
+const btnCari = $('#btnCari'), cariContoh = $('#cariContoh'), cariKirim = $('#cariKirim');
+if (btnCari) btnCari.addEventListener('click', bukaCari);
+if (cariContoh) {
+  cariContoh.addEventListener('click', e => {
+    const c = e.target.closest('.chip'); if (!c) return;
+    if (cariInput) cariInput.value = c.textContent; 
+    jalankanCari();
+  });
+}
+if (cariKirim) cariKirim.addEventListener('click', jalankanCari);
+if (cariInput) cariInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); jalankanCari(); } });
 
 const KATA_KUNCI = {
   gaming: ['gaming', 'rog', 'tuf', 'nitro', 'legion', 'rtx', 'gtx', 'geforce'],
@@ -506,6 +552,7 @@ function cariLokal(q) {
 }
 let nomorCari = 0;
 async function jalankanCari() {
+  if (!cariInput || !cariHasil) return;
   const q = cariInput.value.trim(); if (!q) { cariInput.focus(); return; }
   const no = ++nomorCari;
   cariHasil.innerHTML = '<div class="cari-muat"><span class="putar"></span>Mencari laptop yang cocok...</div>';
@@ -532,10 +579,12 @@ async function jalankanCari() {
       </div>
     </div>`).join('') : '<p class="kecil">Belum ada yang cocok. Coba ubah anggaran atau kebutuhanmu.</p>');
 }
-cariHasil.addEventListener('click', e => {
-  const t = e.target.closest('[data-tambah]'); if (t) { tambahKeranjang(t.dataset.tambah); return; }
-  const o = e.target.closest('[data-open]'); if (o) { dialogCari.close(); bukaDetail(o.dataset.open); }
-});
+if (cariHasil) {
+  cariHasil.addEventListener('click', e => {
+    const t = e.target.closest('[data-tambah]'); if (t) { tambahKeranjang(t.dataset.tambah); return; }
+    const o = e.target.closest('[data-open]'); if (o) { dialogCari?.close(); bukaDetail(o.dataset.open); }
+  });
+}
 
 /* ---------- 10. Data dari Supabase ---------- */
 function dariDb(r) {
@@ -551,7 +600,6 @@ function dariDb(r) {
   };
 }
 async function muatProduk() {
-  /* Produk terbaru selalu di depan. Jika kolom created_at belum ada, pakai id terbesar. */
   let r = await sb.from('produk').select('*').order('created_at', { ascending: false });
   if (r.error) r = await sb.from('produk').select('*').order('id', { ascending: false });
   if (r.error) throw r.error;
