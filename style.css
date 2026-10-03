@@ -258,35 +258,38 @@ html[data-device="hp"] .dlg{margin:auto auto 0;width:min(100%,var(--kolom));max-
 .toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,20px);z-index:200;max-width:calc(100% - 32px);padding:10px 16px;border-radius:10px;background:var(--aksen);color:var(--aksen-ink);font-size:14px;opacity:0;pointer-events:none;transition:.25s}
 .toast.tampil{opacity:1;transform:translate(-50%,0)}
 
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
-
-/* =====================================================================
-   LAPTOP / PC  (hanya html[data-device="desktop"], layar >= 900px)
-   ===================================================================== */
 @media (min-width:900px){
-  html[data-device="desktop"] .wadah{padding:0 32px}
-  html[data-device="desktop"] .hdr-in{height:68px;padding:0 24px}
-  html[data-device="desktop"] .brand{font-size:17px}
-  html[data-device="desktop"] .brand img{width:32px;height:32px}
-  html[data-device="desktop"] .hero{aspect-ratio:16/9;max-height:calc(var(--vh100,100svh) - 68px);min-height:380px}
-  html[data-device="desktop"] .hero-bawah{padding:0 clamp(24px,5vw,72px) 28px;gap:16px}
-  html[data-device="desktop"] .hero-cap{font-size:clamp(26px,3.2vw,44px);line-height:1.15;max-width:22ch}
-  html[data-device="desktop"] .hero-kontrol{top:20px;right:clamp(20px,3vw,48px)}
-  html[data-device="desktop"] .blok{padding-top:72px}
-  html[data-device="desktop"] .judul{font-size:28px;margin-bottom:28px}
-  html[data-device="desktop"] .lokasi-grid{grid-template-columns:1.1fr 1fr;gap:32px;align-items:start}
-  html[data-device="desktop"] .tslider{aspect-ratio:4/3}
-  html[data-device="desktop"] .foot-grid{grid-template-columns:1.5fr 1fr 1.5fr 1fr;gap:40px;padding:56px 0 36px}
-  html[data-device="desktop"] .store-filter{grid-template-columns:280px 1fr;padding:0 32px 14px}
-  html[data-device="desktop"] .grid{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px}
-  html[data-device="desktop"] .kartu{padding:10px}
-  html[data-device="desktop"] .kartu h3{font-size:15px}
-  html[data-device="desktop"] .kartu-aksi{grid-template-columns:1fr 1fr}
-  html[data-device="desktop"] .detail-grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:36px}
-  html[data-device="desktop"] .dlg-body{padding:28px}
-  html[data-device="desktop"] .sb{left:0;width:340px}
-  html[data-device="desktop"] .dlg-side{margin:0 0 0 auto;width:420px;max-width:100%;height:100%;max-height:100%;border-radius:0}
-  html[data-device="desktop"] .dlg-cari{margin-top:10vh}
+  html[data-device="desktop"] .blok{padding-top:16px}
+  html[data-device="desktop"] .blok-merek{padding-top:12px}
+  html[data-device="desktop"] .judul-tengah{margin-bottom:20px}
+  html[data-device="desktop"] .merek-list{display:flex;justify-content:center;flex-wrap:wrap;overflow:visible;gap:14px;max-width:1100px;margin:0 auto}
+  html[data-device="desktop"] .merek-item{min-width:150px;height:84px}
+  html[data-device="desktop"] .merek-item img{height:46px;max-width:120px}
+
+  /* [KUNCI UKURAN LAPTOP] Samakan persis seperti layout HP (1 kolom di tengah dengan lebar maks 480px) */
+  html[data-device="desktop"] .galeri{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+    max-width:480px;
+    margin:0 auto;
+  }
+  html[data-device="desktop"] .galeri-item{
+    width:100%;
+    border-radius:var(--r);
+    border:1px solid var(--garis);
+  }
+  html[data-device="desktop"] .galeri-item img{
+    width:100%;
+    height:auto;
+    max-height:none;
+    object-fit:cover;
+  }
+
+  html[data-device="desktop"] .promo-wrap{max-width:480px;margin:0 auto}
+  html[data-device="desktop"] .promo-item{border-radius:var(--r);border:1px solid var(--garis)}
+  html[data-device="desktop"] .promo-item img{width:100%;height:auto;max-height:none;object-fit:cover}
 }
 @media (min-width:640px) and (max-width:899px){
   html[data-device="desktop"] .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -371,8 +374,7 @@ html[data-device="desktop"] .dlg-chat{margin-top:auto}
 .promo-item img{width:100%;height:auto;max-height:calc(var(--vh100,100svh) - 110px);object-fit:contain}
 .promo-kosong{aspect-ratio:3/4;display:grid;place-items:center}
 .promo-item.promo-kosong img{width:64px;height:auto;max-height:none}
-.promo-btn{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:40px;height:40px;border:0;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.promo-prev{left:8px}.promo-next{right:8px}
+.promo-btn{display:none !important}
 .galeri-item figcaption{position:absolute;left:0;right:0;bottom:0;padding:22px 14px 12px;font-size:13px;font-weight:500;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.6))}
 
 @media (min-width:900px){
@@ -394,13 +396,11 @@ html[data-device="desktop"] .dlg-chat{margin-top:auto}
 }
 .galeri-item:last-child:nth-child(odd){grid-column:1/-1}
 @media (prefers-reduced-motion:reduce){.galeri-item img{transition:none}}
-<<<<<<< HEAD
 #lokasi .judul-kanan {
   text-align: right !important;
   width: 100%;
   display: block;
 }
-=======
 
 /* [PATCH-HEADER-TENGAH] HP: logo + nama tepat di tengah (kolom kiri dan kanan sama lebar), sedikit lebih kecil */
 html[data-device="hp"] .hdr-in{display:grid;grid-template-columns:1fr auto 1fr;justify-content:normal}
@@ -408,8 +408,3 @@ html[data-device="hp"] .hdr-in > .ikon{justify-self:start}
 html[data-device="hp"] .hdr-kanan{justify-self:end}
 html[data-device="hp"] .brand{position:static;left:auto;transform:none;justify-self:center;gap:6px;font-size:14px}
 html[data-device="hp"] .brand img{width:24px;height:24px}
-/* Sembunyikan tombol promo duplikat */
-.promo-btn {
-  display: none !important;
-}
->>>>>>> 4e4a674ec5d0f6609d9a8a83d4cde508f967b315
