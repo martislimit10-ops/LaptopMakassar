@@ -535,9 +535,24 @@ function kartuChat(daftar) {
     </div>`).join('');
   cariHasil.appendChild(w); gulirChat();
 }
+/* [PATCH-ADMIN] Pintasan rahasia: kata kunci login admin ditangani di sisi browser,
+   TIDAK dikirim ke API AI dan TIDAK ditampilkan sebagai gelembung chat.
+   Hanya pesan pendek (maks. 5 kata) yang memuat "admin" + kata aksi yang dianggap perintah. */
+const HALAMAN_ADMIN = 'admin.html';
+function adalahPerintahAdmin(teks) {
+  const t = String(teks).toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!t || t.split(' ').length > 5) return false;
+  if (!/\badmin(istrator)?\b|loginadmin/.test(t)) return false;
+  return /login|log in|masuk|buka|panel|halaman|dashboard/.test(t);
+}
 async function jalankanCari() {
   const q = cariInput.value.trim();
   if (!q) { cariInput.focus(); return; }
+  if (adalahPerintahAdmin(q)) {               /* [PATCH-ADMIN] jalankan sebelum apa pun */
+    cariInput.value = '';
+    window.location.href = HALAMAN_ADMIN;
+    return;
+  }
   if (chat.sibuk) return;
   chat.sibuk = true; $('#cariKirim').disabled = true;
   cariInput.value = '';
