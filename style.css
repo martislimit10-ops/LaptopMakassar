@@ -389,3 +389,8 @@ html[data-device="desktop"] .dlg-chat{margin-top:auto}
 }
 .galeri-item:last-child:nth-child(odd){grid-column:1/-1}
 @media (prefers-reduced-motion:reduce){.galeri-item img{transition:none}}
+#lokasi .judul-kanan {
+  text-align: right !important;
+  width: 100%;
+  display: block;
+}
