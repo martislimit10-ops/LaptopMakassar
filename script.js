@@ -175,12 +175,13 @@ function heroKe(i, awal = false) {
   if (!awal) hero.jeda = false;
   hero.idx = ((i % n) + n) % n;
   heroTrack.style.transform = `translateX(-${hero.idx * 100}%)`;
-  $$('.hero-slide', heroTrack).forEach((s, k) => s.setAttribute('aria-hidden', String(k !== hero.idx)));$$
-('#heroBars button').forEach((b, k) => b.setAttribute('aria-current', String(k === hero.idx)));
+  $$('.hero-slide', heroTrack).forEach((s, k) => s.setAttribute('aria-hidden', String(k !== hero.idx)));
+  $$('#heroBars button').forEach((b, k) => b.setAttribute('aria-current', String(k === hero.idx)));
   const s = slideAktif();
   $('#heroCap').textContent = s.judul || '';
   /* kontrol jeda/suara HANYA untuk slide video; slide foto tanpa kontrol */
-  $('#heroKontrol').hidden = s.jenis !== 'video';   $$('video', heroTrack).forEach(v => { v.pause(); v.currentTime = 0; v.muted = !hero.suara; });
+  $('#heroKontrol').hidden = s.jenis !== 'video';
+  $$('video', heroTrack).forEach(v => { v.pause(); v.currentTime = 0; v.muted = !hero.suara; });
   perbaruiIkonHero();
   clearTimeout(hero.timer);
   if (s.jenis === 'video') {
@@ -209,7 +210,9 @@ $('#heroJeda').addEventListener('click', () => {
   if (hero.jeda) v.pause(); else v.play().catch(() => {});
   perbaruiIkonHero();
 });
-$('#heroSuara').addEventListener('click', () => {   hero.suara = !hero.suara;   $$('video', heroTrack).forEach(v => { v.muted = !hero.suara; });
+$('#heroSuara').addEventListener('click', () => {
+  hero.suara = !hero.suara;
+  $$('video', heroTrack).forEach(v => { v.muted = !hero.suara; });
   perbaruiIkonHero();
 });
 $('#heroPrev').addEventListener('click', () => heroKe(hero.idx - 1));
@@ -274,7 +277,8 @@ function tutupToko() {
 }
 window.addEventListener('hashchange', sinkronToko);
 $('#btnToko').addEventListener('click', bukaToko);
-$('#storeBack').addEventListener('click', tutupToko); $$('a[href="#toko"]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); bukaToko(); }));
+$('#storeBack').addEventListener('click', tutupToko);
+$$('a[href="#toko"]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); bukaToko(); }));
 
 storeSelect.innerHTML =
   '<option value="all">Semua laptop</option>' +
@@ -393,7 +397,8 @@ function renderKeranjang() {
   const l = isiKeranjang();
   const jumlah = l.reduce((s, x) => s + x.qty, 0);
   const total = l.reduce((s, x) => s + x.p.harga * x.qty, 0);
-  $$('[data-badge]').forEach(b => { b.textContent = jumlah; b.hidden = !jumlah; });$('#cartbar').hidden = !jumlah;
+  $$('[data-badge]').forEach(b => { b.textContent = jumlah; b.hidden = !jumlah; });
+  $('#cartbar').hidden = !jumlah;
   $('#cbJumlah').textContent = `${jumlah} item`;
   $('#cbTotal').textContent = rupiah(total);
   $('#krTotal').textContent = rupiah(total);
@@ -461,7 +466,7 @@ function bukaDetail(id) {
 }
 $('#detailTambah').addEventListener('click', () => { if (detailId !== null) { tambahKeranjang(detailId); detail.close(); } });
 
-/* ---------- 9. Pencarian Lokal Cerdas (Interaksi Super Luas & Natural Ala CS Toko) ---------- */
+/* ---------- 9. Pencarian AI (Gemini lewat Supabase Edge Function) ---------- */
 const dialogCari = $('#cari'), cariInput = $('#cariInput'), cariHasil = $('#cariHasil');
 function bukaCari() { bukaDialog(dialogCari); setTimeout(() => cariInput.focus(), 50); }
 $('#btnCari').addEventListener('click', bukaCari);
@@ -472,218 +477,67 @@ $('#cariContoh').addEventListener('click', e => {
 $('#cariKirim').addEventListener('click', jalankanCari);
 cariInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); jalankanCari(); } });
 
-function cariLokalCerdas(q) {
-  const t = q.toLowerCase().trim();
-  const noWa = CONFIG.wa || 'Admin';
-  const linkWaCustom = waLink(`Halo Kak, saya mau konsultasi / cari unit laptop dengan detail: "${q}"`);
-
-  // --- KAMUS PERCAKAPAN LENGKAP & NATURAL ---
-  const sapaanList = ['halo', 'hai', 'hallo', 'hei', 'p', 'assalamu', 'selamat pagi', 'selamat siang', 'selamat sore', 'selamat malam', 'min', 'admin', 'gan', 'bos', 'bro'];
-  const konfirmasiYa = ['iya', 'iya nih', 'yup', 'boleh', 'mau', 'ada', 'oke', 'ok', 'siap', 'boleh banget', 'betul', 'yoi', 'pasti'];
-  const konfirmasiTidak = ['gak', 'nggak', 'tidak', 'ga', 'belum', 'nanti dulu', 'makasih', 'terima kasih', 'thanks', 'cukup', 'tdk'];
-  
-  // Tanya Toko & Alamat
-  const tanyaToko = ['toko', 'lokasi', 'alamat', 'dimana', 'di mana', 'tempat', 'store', 'datang langsung', 'offline', 'maps', 'peta'];
-  const tanyaJam = ['buka jam', 'jam berapa', 'tutup', 'operasional', 'hari apa aja', 'senin sampai'];
-  
-  // Tanya Layanan, Cicilan & Tukar Tambah
-  const tanyaCicilan = ['cicil', 'kredit', 'angsuran', 'dp', 'paylater', 'spaylater', 'kartu kredit', 'leasing'];
-  const tanyaTradeIn = ['tukar tambah', 'tukar', 'trade in', 'tambah bayar', 'barter', 'jual laptop lama'];
-  const tanyaGaransi = ['garansi', 'segel', 'rusak', 'garansi toko', 'service', 'servis', 'ada garansinya'];
-  const tanyaKondisi = ['kondisi', 'fisik', 'mulus', 'bekas', 'second', 'baru', 'lelangan', 'ex display'];
-  const tanyaBonus = ['bonus', 'dapat apa aja', 'kelengkapan', 'tas', 'mouse', 'charger', 'dus'];
-
-  // Cek Sapaan
-  if (sapaanList.some(s => t === s || t.startsWith(s + ' '))) {
-    return {
-      jawaban: "Halo juga Kak! 😊 Selamat datang di toko kami. Ada yang bisa dibantu atau lagi cari laptop apa nih?",
-      rekomendasi: [], linkWa: null
-    };
-  }
-  // Cek Konfirmasi Ya
-  if (konfirmasiYa.some(k => t === k || t.includes('iya nih'))) {
-    return {
-      jawaban: "Siap Kak! Silakan sebutkan budget, merek, atau kebutuhan laptopnya ya (misalnya: buat kuliah, gaming, atau desain), nanti saya carikan unit terbaik yang ready! 😊",
-      rekomendasi: [], linkWa: null
-    };
-  }
-  // Cek Konfirmasi Tidak
-  if (konfirmasiTidak.some(k => t === k)) {
-    return {
-      jawaban: "Baik Kak! Kalau sewaktu-waktu butuh bantuan atau mau tanya soal laptop, kabari saja ya. Jangan ragu mampir ke toko! 😊",
-      rekomendasi: [], linkWa: null
-    };
-  }
-  // Cek Lokasi Toko
-  if (tanyaToko.some(k => t.includes(k))) {
-    return {
-      jawaban: `Lokasi toko kami bertempat di ${CONFIG.alamat || 'Makassar'}. Kakak bisa langsung mampir ke toko fisik kami atau cek peta di halaman utama ya! 😊`,
-      rekomendasi: [], linkWa: null
-    };
-  }
-  // Cek Jam Buka
-  if (tanyaJam.some(k => t.includes(k))) {
-    return {
-      jawaban: `Untuk jam operasional toko kami: ${CONFIG.jam || 'Setiap hari buka'}. Silakan datang di jam tersebut ya Kak! 😊`,
-      rekomendasi: [], linkWa: null
-    };
-  }
-  // Cek Cicilan / Kredit
-  if (tanyaCicilan.some(k => t.includes(k))) {
-    return {
-      jawaban: "Untuk sistem pembayaran cicilan atau kredit, Kakak bisa langsung diskusikan dengan admin kami via WhatsApp ya agar dibantu simulasi dan persyaratannya! 💬",
-      rekomendasi: [], linkWa: linkWaCustom
-    };
-  }
-  // Cek Tukar Tambah
-  if (tanyaTradeIn.some(k => t.includes(k))) {
-    return {
-      jawaban: "Bisa banget Kak! Kami melayani tukar tambah laptop lama dengan unit yang ada di toko. Cek spesifikasi laptop lama Kakak lalu kirim fotonya ke WhatsApp admin ya! 📱",
-      rekomendasi: [], linkWa: linkWaCustom
-    };
-  }
-  // Cek Garansi
-  if (tanyaGaransi.some(k => t.includes(k))) {
-    return {
-      jawaban: "Tenang saja Kak, semua unit di toko kami sudah lolos uji QC (Quality Control) ketat dan diberikan garansi toko untuk keamanan pemakaian! 👍",
-      rekomendasi: [], linkWa: null
-    };
-  }
-  // Cek Kondisi Laptop
-  if (tanyaKondisi.some(k => t.includes(k))) {
-    return {
-      jawaban: "Kami menyediakan unit pilihan terbaik, mulai dari kondisi mulus seperti baru (like new) hingga unit seken berkualitas tinggi yang siap pakai. Silakan cari atau tanya unit spesifiknya ya Kak! 😊",
-      rekomendasi: [], linkWa: null
-    };
-  }
-  // Cek Bonus & Kelengkapan
-  if (tanyaBonus.some(k => t.includes(k))) {
-    return {
-      jawaban: "Umumnya setiap pembelian laptop di toko kami sudah termasuk unit, charger original, tas/pouch, dan bonus menarik lainnya (selama persediaan masih ada ya Kak)! 🎒",
-      rekomendasi: [], linkWa: null
-    };
-  }
-
-  // --- DETEKSI HARGA & BUDGET ---
-  let maksHarga = null, minHarga = null;
-  const rentangMatch = t.match(/(\d+)\s*(?:sampai|sampai dengan|-)\s*(\d+)\s*(juta|jt)/);
-  const hargaMatch = t.match(/(?:di bawah|dibawah|kurang dari|maksimal|maks)\s*(\d+(?:[.,]\d+)?)\s*(juta|jt|ribu|rb)/);
-  const hargaUmum = t.match(/(\d+(?:[.,]\d+)?)\s*(juta|jt|ribu|rb)/);
-
-  if (rentangMatch) {
-    minHarga = parseFloat(rentangMatch[1]) * 1e6;
-    maksHarga = parseFloat(rentangMatch[2]) * 1e6;
-  } else if (hargaMatch) {
-    const n = parseFloat(hargaMatch[1].replace(',', '.'));
-    maksHarga = /^j/.test(hargaMatch[2]) ? n * 1e6 : n * 1e3;
-  } else if (hargaUmum && (/juta|jt|ribu|rb/.test(t))) {
-    const n = parseFloat(hargaUmum[1].replace(',', '.'));
-    const val = /^j/.test(hargaUmum[2]) ? n * 1e6 : n * 1e3;
-    if (t.includes('jutaan')) {
-      minHarga = val - 500000;
-      maksHarga = val + 1500000;
-    } else {
-      maksHarga = val + 250000;
-    }
-  }
-
-  // --- DETEKSI KEBUTUHAN UTAMA ---
-  const isGaming = /\b(gaming|game|rog|tuf|nitro|legion|rtx|gtx|geforce|esports)\b/.test(t);
-  const isEdit = /\b(edit|render|desain|design|autocad|premiere|corel|photoshop|blender|3d)\b/.test(t);
-  const isKantor = /\b(kantor|office|kerja|kuliah|sekolah|tugas|ngetik|mahasiswa|admin|word|excel)\b/.test(t);
-  const isTipis = /\b(tipis|ringan|ultrabook|mudah dibawa|portable|zenbook|macbook|air)\b/.test(t);
-
-  const kataArray = t.replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(k => k.length > 1);
-
-  // --- PROSES SKORING PRODUK ---
-  const hasilSkor = PRODUK.map(p => {
-    let skor = 0;
-    const sp = p.spek || {};
-    const teksProduk = [namaLengkap(p), p.kategori, sp.processor, sp.ram, sp.storage, sp.vga].join(' ').toLowerCase();
-
-    if (maksHarga && p.harga > maksHarga) return { p, skor: -999 };
-    if (minHarga && p.harga < minHarga) return { p, skor: -999 };
-
-    kataArray.forEach(k => {
-      if (teksProduk.includes(k)) skor += 2;
-    });
-
-    if (isGaming && (teksProduk.includes('rtx') || teksProduk.includes('gtx') || teksProduk.includes('rog') || teksProduk.includes('tuf') || teksProduk.includes('nitro') || teksProduk.includes('legion'))) {
-      skor += 6;
-    }
-    if (isEdit && (teksProduk.includes('16gb') || teksProduk.includes('32gb') || teksProduk.includes('i7') || teksProduk.includes('ryzen 7') || teksProduk.includes('ssd'))) {
-      skor += 6;
-    }
-    if (isKantor && (teksProduk.includes('i5') || teksProduk.includes('i3') || teksProduk.includes('vivobook') || teksProduk.includes('ideapad') || teksProduk.includes('ssd'))) {
-      skor += 4;
-    }
-    if (isTipis && (teksProduk.includes('zenbook') || teksProduk.includes('swift') || teksProduk.includes('slim') || teksProduk.includes('macbook'))) {
-      skor += 5;
-    }
-
+const KATA_KUNCI = {
+  gaming: ['gaming', 'rog', 'tuf', 'nitro', 'legion', 'rtx', 'gtx', 'geforce'],
+  game: ['gaming', 'rog', 'tuf', 'nitro', 'legion', 'rtx', 'gtx', 'geforce'],
+  edit: ['rtx', 'gtx', 'ryzen 7', 'i7', 'i5', '16 gb', '32 gb', 'macbook', 'm1', 'm2'],
+  video: ['rtx', 'gtx', 'ryzen 7', 'i7', 'i5', '16 gb', '32 gb', 'macbook', 'm1', 'm2'],
+  desain: ['rtx', 'gtx', 'ryzen 7', 'i7', '16 gb', 'macbook', 'm1', 'm2'],
+  kantor: ['thinkpad', 'latitude', 'elitebook', 'probook', 'vivobook', 'i5'],
+  kerja: ['thinkpad', 'latitude', 'elitebook', 'probook', 'vivobook', 'i5'],
+  kuliah: ['celeron', 'vivobook', 'aspire', 'i3', 'i5'],
+  sekolah: ['celeron', 'vivobook', 'aspire', 'i3'],
+  murah: ['celeron', 'i3', 'aspire']
+};
+function cariLokal(q) {
+  const t = q.toLowerCase();
+  let maks = null;
+  const m = t.match(/(\d+(?:[.,]\d+)?)\s*(juta|jt|ribu|rb)/);
+  if (m) { const n = parseFloat(m[1].replace(',', '.')); maks = /^j/.test(m[2]) ? n * 1e6 : n * 1e3; }
+  const kata = t.replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(k => k.length > 2);
+  const istilah = new Set(); kata.forEach(k => { istilah.add(k); (KATA_KUNCI[k] || []).forEach(x => istilah.add(x)); });
+  const hasil = PRODUK.filter(p => !maks || p.harga <= maks).map(p => {
+    const jerami = [namaLengkap(p), p.kategori, ...Object.values(p.spek || {})].join(' ').toLowerCase();
+    let skor = 0; istilah.forEach(k => { if (jerami.includes(k)) skor++; });
     return { p, skor };
-  }).filter(x => x.skor > 0);
-
-  hasilSkor.sort((a, b) => b.skor - a.skor || a.p.harga - b.p.harga);
-
-  const rekomendasiFinal = hasilSkor.slice(0, 5).map(x => ({
-    id: String(x.p.id),
-    alasan: [x.p.spek?.processor, x.p.spek?.ram && `RAM ${x.p.spek.ram}`, x.p.spek?.storage, x.p.vga && `GPU ${x.p.vga}`].filter(Boolean).join(', ')
-  }));
-
-  let jawabanTeks = '';
-  let finalLinkWa = null;
-
-  if (rekomendasiFinal.length > 0) {
-    jawabanTeks = `Ketemu nih Kak! 😊 Berdasarkan pencarian "${q}", berikut beberapa pilihan unit terbaik yang ready di toko kami:`;
-  } else {
-    // JIKA TIDAK ADA / SPESIFIKASI KOSONG -> LANGSUNG TERANGKAN KONTAK ADMIN WHATSAPP
-    jawabanTeks = `Waduh, untuk spesifikasi atau kriteria "${q}" pas lagi kosong atau belum ada di daftar stok online kami Kak.\n\nTapi tenang! Kakak bisa langsung hubungi admin kami untuk cek ketersediaan unit custom atau pesan khusus via WhatsApp di nomor *${noWa}* atau klik tombol di bawah ini ya! 👇`;
-    finalLinkWa = linkWaCustom;
-  }
-
-  return { jawaban: jawabanTeks, rekomendasi: rekomendasiFinal, linkWa: finalLinkWa };
+  }).filter(x => x.skor > 0 || (maks && !istilah.size)).sort((a, b) => b.skor - a.skor || a.p.harga - b.p.harga).slice(0, 5);
+  return {
+    ringkasan: 'Hasil pencarian kata kunci (asisten AI sedang tidak tersedia).',
+    hasil: hasil.map(x => ({ id: String(x.p.id), alasan: [x.p.spek?.processor, x.p.spek?.ram && `RAM ${x.p.spek.ram}`, x.p.spek?.storage].filter(Boolean).join(', ') }))
+  };
 }
-
-/* Panel Chat / Interaksi */
-const chat = { sibuk: false };
+/* [PATCH-CHATBOT] Chatbot percakapan (Gemini lewat Edge Function "cari-ai", mode riwayat) */
+const chat = { riwayat: [], sibuk: false };   // riwayat: [{ role: 'user' | 'model', text }]
+const CHAT_MAKS_RIWAYAT = 10;
 function gulirChat() { const b = cariHasil.closest('.dlg-body'); if (b) b.scrollTop = b.scrollHeight; }
 function gelembung(role, teks) {
   const d = document.createElement('div');
   d.className = 'gel ' + (role === 'user' ? 'gel-user' : 'gel-bot');
-  d.textContent = teks;
+  d.textContent = teks;                       /* textContent: aman dari XSS */
   cariHasil.appendChild(d); gulirChat();
 }
-function kartuChat(daftar, linkWa) {
+function kartuChat(daftar) {
   const l = (daftar || []).map(h => ({ p: cariProduk(h.id), alasan: h.alasan })).filter(x => x.p);
-  
-  if (l.length > 0) {
-    const w = document.createElement('div'); w.className = 'gel-kartu';
-    w.innerHTML = l.map(({ p, alasan }) => `
-      <div class="cari-kartu">
-        <div class="kr-foto"><img src="${esc(p.foto)}" alt="" ${fotoErr}></div>
-        <div>
-          <p class="kr-nama">${esc(namaLengkap(p))}</p>
-          <p class="kr-harga"><b>${rupiah(p.harga)}</b></p>
-          <p class="cari-alasan">${esc(alasan)}</p>
-          <div class="cari-aksi">
-            <button type="button" class="btn btn-kecil btn-garis" data-open="${esc(p.id)}">Pelajari</button>
-            <button type="button" class="btn btn-kecil" data-tambah="${esc(p.id)}">Tambah</button>
-          </div>
+  if (!l.length) return;
+  const w = document.createElement('div'); w.className = 'gel-kartu';
+  w.innerHTML = l.map(({ p, alasan }) => `
+    <div class="cari-kartu">
+      <div class="kr-foto"><img src="${esc(p.foto)}" alt="" ${fotoErr}></div>
+      <div>
+        <p class="kr-nama">${esc(namaLengkap(p))}</p>
+        <p class="kr-harga"><b>${rupiah(p.harga)}</b></p>
+        <p class="cari-alasan">${esc(alasan)}</p>
+        <div class="cari-aksi">
+          <button type="button" class="btn btn-kecil btn-garis" data-open="${esc(p.id)}">Pelajari</button>
+          <button type="button" class="btn btn-kecil" data-tambah="${esc(p.id)}">Tambah</button>
         </div>
-      </div>`).join('');
-    cariHasil.appendChild(w);
-  } 
-  
-  if (linkWa) {
-    // Tombol langsung chat WhatsApp admin
-    const w = document.createElement('div'); w.className = 'gel-kartu';
-    w.innerHTML = `<div style="text-align:center; padding: 12px;"><a href="${linkWa}" target="_blank" rel="noopener" class="btn" style="background:#25d366; color:#fff; display:inline-block; text-decoration:none; padding:10px 18px; border-radius:8px; font-weight:600;">💬 Chat Admin WhatsApp (${esc(CONFIG.wa || 'Admin')})</a></div>`;
-    cariHasil.appendChild(w);
-  }
-  gulirChat();
+      </div>
+    </div>`).join('');
+  cariHasil.appendChild(w); gulirChat();
 }
-
+/* [PATCH-ADMIN] Pintasan rahasia: kata kunci login admin ditangani di sisi browser,
+   TIDAK dikirim ke API AI dan TIDAK ditampilkan sebagai gelembung chat.
+   Hanya pesan pendek (maks. 5 kata) yang memuat "admin" + kata aksi yang dianggap perintah. */
 const HALAMAN_ADMIN = 'admin.html';
 function adalahPerintahAdmin(teks) {
   const t = String(teks).toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -691,11 +545,10 @@ function adalahPerintahAdmin(teks) {
   if (!/\badmin(istrator)?\b|loginadmin/.test(t)) return false;
   return /login|log in|masuk|buka|panel|halaman|dashboard/.test(t);
 }
-
-function jalankanCari() {
+async function jalankanCari() {
   const q = cariInput.value.trim();
   if (!q) { cariInput.focus(); return; }
-  if (adalahPerintahAdmin(q)) {
+  if (adalahPerintahAdmin(q)) {               /* [PATCH-ADMIN] jalankan sebelum apa pun */
     cariInput.value = '';
     window.location.href = HALAMAN_ADMIN;
     return;
@@ -704,23 +557,99 @@ function jalankanCari() {
   chat.sibuk = true; $('#cariKirim').disabled = true;
   cariInput.value = '';
   gelembung('user', q);
-  
   const ketik = document.createElement('div');
   ketik.className = 'gel gel-bot gel-ketik'; ketik.innerHTML = '<span></span><span></span><span></span>';
   cariHasil.appendChild(ketik); gulirChat();
-
-  setTimeout(() => {
+  try {
+    await siapProduk;
+    const kirim = chat.riwayat.concat({ role: 'user', text: q }).slice(-CHAT_MAKS_RIWAYAT);
+    let data;
+    try {
+      /* "q" ikut dikirim agar Edge Function versi lama tetap bisa menjawab (mode pencarian) */
+      const r = await sb.functions.invoke('cari-ai', { body: { q, riwayat: kirim } });
+      if (r.error || !r.data || r.data.error) throw r.error || new Error(r.data?.error || 'kosong');
+      data = r.data;
+    } catch (e) {
+      console.warn('Chatbot AI gagal, memakai pencarian lokal:', e);
+      const lokal = cariLokal(q);
+      data = {
+        jawaban: lokal.hasil.length ? 'Asisten AI sedang sibuk kak. Ini hasil pencarian cepat dari stok kami:' : 'Maaf kak, asisten AI sedang tidak tersedia. Silakan tanya langsung lewat WhatsApp ya.',
+        rekomendasi: lokal.hasil
+      };
+    }
     ketik.remove();
-    const hasilCerdas = cariLokalCerdas(q);
-    gelembung('model', hasilCerdas.jawaban);
-    kartuChat(hasilCerdas.rekomendasi, hasilCerdas.linkWa);
+    const jawaban = String(data.jawaban || data.ringkasan || '').trim() || 'Maaf kak, saya belum bisa menjawab itu.';
+    gelembung('model', jawaban);
+    kartuChat(data.rekomendasi || data.hasil);
+    chat.riwayat = chat.riwayat.concat({ role: 'user', text: q }, { role: 'model', text: jawaban }).slice(-CHAT_MAKS_RIWAYAT);
+  } finally {
+    if (ketik.parentNode) ketik.remove();
     chat.sibuk = false; $('#cariKirim').disabled = false; cariInput.focus();
-  }, 250);
+  }
 }
-
-gelembung('model', 'Halo Kak! 😊 Silakan ketik apa saja yang ingin ditanyakan. Bisa tanya soal laptop gaming, cicilan, tukar tambah, alamat toko, atau spesifikasi khusus.');
+gelembung('model', 'Halo kak! Saya asisten Laptop Makassar. Boleh tanya soal rekomendasi laptop sesuai budget, gaming atau edit video, perbandingan spek, garansi, sampai jam buka toko. Mau cari laptop yang seperti apa?');
 
 cariHasil.addEventListener('click', e => {
   const t = e.target.closest('[data-tambah]'); if (t) { tambahKeranjang(t.dataset.tambah); return; }
   const o = e.target.closest('[data-open]'); if (o) { dialogCari.close(); bukaDetail(o.dataset.open); }
 });
+
+/* ---------- 10. Data dari Supabase ---------- */
+function dariDb(r) {
+  let spek = r.spek;
+  if (typeof spek === 'string') { try { spek = JSON.parse(spek); } catch { spek = {}; } }
+  let tags = r.tags;
+  if (typeof tags === 'string') { try { tags = JSON.parse(tags); } catch { tags = []; } }
+  return {
+    id: r.id, kategori: r.kategori, merek: r.merek || '', seri: r.seri || '',
+    harga: Number(r.harga) || 0, hargaNormal: r.harganormal ? Number(r.harganormal) : null,
+    tags: Array.isArray(tags) ? tags : [], kondisi: KONDISI[r.kondisi] ? r.kondisi : 'bekas',
+    foto: r.foto || window.FOTO_KOSONG, spek: spek || {}
+  };
+}
+async function muatProduk() {
+  /* Produk terbaru selalu di depan. Jika kolom created_at belum ada, pakai id terbesar. */
+  let r = await sb.from('produk').select('*').order('created_at', { ascending: false });
+  if (r.error) r = await sb.from('produk').select('*').order('id', { ascending: false });
+  if (r.error) throw r.error;
+  PRODUK = (r.data || []).map(dariDb);
+}
+async function muatConfig() {
+  const { data, error } = await sb.from('config').select('*').order('id', { ascending: true }).limit(1);
+  if (error) throw error;
+  const c = data && data[0]; if (!c) return;
+  Object.keys(CONFIG_AWAL).forEach(k => { if (c[k] !== undefined && c[k] !== null && String(c[k]).trim() !== '') CONFIG[k] = c[k]; });
+}
+async function muatBanner() {
+  const { data, error } = await sb.from('banner').select('*').order('urutan', { ascending: true });
+  if (error) throw error;
+  BANNER = data || [];
+}
+let terakhirMuat = 0, siapProduk = Promise.resolve();
+async function muatSemua() {
+  sedangMemuat = !PRODUK.length; gagalMemuat = false; renderKatalog();
+  const pProduk = muatProduk();
+  siapProduk = pProduk.catch(() => {});
+  const hasil = await Promise.allSettled([pProduk, muatConfig(), muatBanner()]);
+  hasil.forEach(h => { if (h.status === 'rejected') console.error('Gagal memuat dari Supabase:', h.reason); });
+  gagalMemuat = hasil[0].status === 'rejected';
+  sedangMemuat = false; terakhirMuat = Date.now();
+  renderKatalog(); terapkanConfig(); renderHero(); renderSliderToko(); bersihkanKeranjang();
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && Date.now() - terakhirMuat > 20000) muatSemua();
+});
+let timerRealtime = null;
+try {
+  sb.channel('perubahan-toko')
+    .on('postgres_changes', { event: '*', schema: 'public' }, () => { clearTimeout(timerRealtime); timerRealtime = setTimeout(muatSemua, 400); })
+    .subscribe();
+} catch (e) { console.warn('Realtime tidak aktif:', e); }
+
+/* ---------- 11. Mulai ---------- */
+terapkanConfig();
+renderHero();
+renderSliderToko();
+renderKeranjang();
+muatSemua();
+sinkronToko();
