@@ -234,7 +234,7 @@ function pasangGeser(el, aksi) {
 }
 
 /* ---------- 5. Galeri "Kunjungi toko kami" (3-4 slot, dikelola dari admin) [PATCH-GALERI] ---------- */
-const GALERI_MAKS = 4;
+const GALERI_MAKS = 4, GALERI_MIN = 3;
 const galeri = { sig: '' };
 /* Nama fungsi sengaja dipertahankan agar pemanggil lama (muatSemua & bagian Mulai) tetap jalan */
 function renderSliderToko() {
@@ -243,13 +243,15 @@ function renderSliderToko() {
   const sig = JSON.stringify(l.map(b => [b.id, b.url, b.judul, b.urutan]));
   if (sig === galeri.sig) return;
   galeri.sig = sig;
-  if (!l.length) {
-    root.innerHTML = `<figure class="galeri-item galeri-kosong"><img src="${window.FOTO_KOSONG}" alt="" loading="lazy"></figure>`;
-    return;
+  const slot = Math.max(GALERI_MIN, l.length);
+  let html = '';
+  for (let i = 0; i < slot; i++) {
+    const b = l[i];
+    html += b
+      ? `<figure class="galeri-item"><img src="${esc(b.url)}" alt="${esc(b.judul || 'Foto toko Laptop Makassar')}" loading="lazy" ${fotoErr}>${b.judul ? `<figcaption>${esc(b.judul)}</figcaption>` : ''}</figure>`
+      : `<figure class="galeri-item galeri-kosong"><img src="${window.FOTO_KOSONG}" alt="" loading="lazy"></figure>`;
   }
-  root.innerHTML = l.map(b =>
-    `<figure class="galeri-item"><img src="${esc(b.url)}" alt="${esc(b.judul || 'Foto toko Laptop Makassar')}" loading="lazy" ${fotoErr}>${b.judul ? `<figcaption>${esc(b.judul)}</figcaption>` : ''}</figure>`
-  ).join('');
+  root.innerHTML = html;
 }
 
 /* ---------- 5b. Promo Saat Ini (bagian = 'promo' di tabel banner) [PATCH-PROMO] ---------- */
