@@ -405,3 +405,11 @@ html[data-device="hp"] .hdr-in > .ikon{justify-self:start}
 html[data-device="hp"] .hdr-kanan{justify-self:end}
 html[data-device="hp"] .brand{position:static;left:auto;transform:none;justify-self:center;gap:6px;font-size:14px}
 html[data-device="hp"] .brand img{width:24px;height:24px}
+/* Mengatur agar area banner/promo otomatis mengisi penuh layout */
+.promo-list img, 
+.hero-track img, 
+.galeri img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
