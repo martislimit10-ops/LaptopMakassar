@@ -255,18 +255,31 @@ function renderSliderToko() {
 }
 
 /* ---------- 5b. Promo Saat Ini (bagian = 'promo' di tabel banner) [PATCH-PROMO] ---------- */
+const PROMO_MIN = 5;
 const promo = { sig: '' };
 function renderPromo() {
-  const sec = $('#promo'), root = $('#promoList'); if (!sec || !root) return;
+  const root = $('#promoList'); if (!root) return;
   const l = BANNER.filter(b => b.bagian === 'promo' && b.jenis === 'foto');
   const sig = JSON.stringify(l.map(b => [b.id, b.url, b.judul, b.urutan]));
   if (sig === promo.sig) return;
   promo.sig = sig;
-  sec.hidden = !l.length;
-  root.innerHTML = l.map((b, i) =>
-    `<figure class="promo-item"><img src="${esc(b.url)}" alt="${esc(b.judul || 'Promo Laptop Makassar')}" ${i < 2 ? '' : 'loading="lazy"'} ${fotoErr}></figure>`
-  ).join('');
+  const slot = Math.max(PROMO_MIN, l.length);
+  let html = '';
+  for (let i = 0; i < slot; i++) {
+    const b = l[i];
+    html += b
+      ? `<figure class="promo-item"><img src="${esc(b.url)}" alt="${esc(b.judul || 'Promo Laptop Makassar')}" ${i < 2 ? '' : 'loading="lazy"'} ${fotoErr}></figure>`
+      : `<figure class="promo-item promo-kosong"><img src="${window.FOTO_KOSONG}" alt="" loading="lazy"></figure>`;
+  }
+  root.innerHTML = html;
 }
+(function () {
+  const root = $('#promoList'); if (!root) return;
+  const geser = arah => root.scrollBy({ left: arah * root.clientWidth * 0.9, behavior: 'smooth' });
+  const p = $('.promo-prev'), n = $('.promo-next');
+  if (p) p.addEventListener('click', () => geser(-1));
+  if (n) n.addEventListener('click', () => geser(1));
+})();
 
 /* ---------- 6. Halaman Toko (#toko) ---------- */
 const storePage = $('#storePage'), storeSelect = $('#storeKategori'), storeCari = $('#storeCari');

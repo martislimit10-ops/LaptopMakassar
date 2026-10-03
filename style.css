@@ -350,25 +350,40 @@ html[data-device="desktop"] .dlg-chat{margin-top:auto}
 .blok-merek{padding-top:16px}
 .merek-list{list-style:none;margin:0;padding:4px 2px;display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .merek-list::-webkit-scrollbar{display:none}
-.merek-item{flex:0 0 auto;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;min-width:96px;height:56px;padding:0 16px;border:1px solid var(--garis);border-radius:12px;background:#fff;color:#111827;font-size:14px;font-weight:700;letter-spacing:.02em}
-.merek-item img{display:block;height:28px;width:auto;max-width:84px;object-fit:contain}
+.merek-item{flex:0 0 auto;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;min-width:124px;height:72px;padding:0 20px;border:1px solid var(--garis);border-radius:12px;background:#fff;color:#111827;font-size:16px;font-weight:700;letter-spacing:.02em}
+.merek-item img{display:block;height:38px;width:auto;max-width:104px;object-fit:contain}
 .merek-item img + span{display:none}
 
 /* Galeri toko + daftar promo: gambar tampil utuh dengan tinggi mengikuti gambar */
-.galeri,.promo-list{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;max-width:640px;margin:0 auto;align-items:start}
+.galeri{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;max-width:640px;margin:0 auto;align-items:start}
 .galeri-item,.promo-item{position:relative;min-width:0;margin:0;overflow:hidden;border:1px solid var(--garis);border-radius:var(--r);background:var(--surface-2)}
 .galeri-item img,.promo-item img{display:block;width:100%;height:auto}
 .galeri-kosong{aspect-ratio:4/3;display:grid;place-items:center}
-.galeri-kosong img{width:64px;opacity:.5}
+.galeri-kosong img,.promo-kosong img{width:64px;opacity:.5}
+.promo-wrap{position:relative;margin:0 -16px}
+.promo-list{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;align-items:flex-start}
+.promo-list::-webkit-scrollbar{display:none}
+.promo-item{flex:0 0 100%;scroll-snap-align:start;border-radius:0;border-left:0;border-right:0;background:var(--surface-2)}
+.promo-item img{width:100%;height:auto;max-height:calc(var(--vh100,100svh) - 110px);object-fit:contain}
+.promo-kosong{aspect-ratio:3/4;display:grid;place-items:center}
+.promo-item.promo-kosong img{width:64px;height:auto;max-height:none}
+.promo-btn{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:40px;height:40px;border:0;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.promo-prev{left:8px}.promo-next{right:8px}
 .galeri-item figcaption{position:absolute;left:0;right:0;bottom:0;padding:22px 14px 12px;font-size:13px;font-weight:500;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.6))}
 
 @media (min-width:900px){
   html[data-device="desktop"] .blok{padding-top:48px}
   html[data-device="desktop"] .blok-merek{padding-top:24px}
   html[data-device="desktop"] .judul-tengah{margin-bottom:20px}
-  html[data-device="desktop"] .merek-list{justify-content:center;flex-wrap:wrap;overflow:visible}
-  html[data-device="desktop"] .galeri,
-  html[data-device="desktop"] .promo-list{grid-template-columns:repeat(2,minmax(0,1fr));max-width:1100px;gap:14px}
+  html[data-device="desktop"] .merek-list{justify-content:center;flex-wrap:wrap;overflow:visible;gap:14px;max-width:1100px;margin:0 auto}
+  html[data-device="desktop"] .merek-item{min-width:150px;height:84px}
+  html[data-device="desktop"] .merek-item img{height:46px;max-width:120px}
+  html[data-device="desktop"] .galeri{grid-template-columns:repeat(2,minmax(0,1fr));max-width:1100px;gap:14px}
+  html[data-device="desktop"] .promo-wrap{max-width:1100px;margin:0 auto}
+  html[data-device="desktop"] .promo-list{gap:14px}
+  html[data-device="desktop"] .promo-item{border-radius:var(--r);border:1px solid var(--garis)}
+  html[data-device="desktop"] .promo-kosong{aspect-ratio:16/9}
+  html[data-device="desktop"] .promo-item img{max-height:calc(var(--vh100,100svh) - 120px)}
 }
-.galeri-item:last-child:nth-child(odd),.promo-item:last-child:nth-child(odd){grid-column:1/-1}
+.galeri-item:last-child:nth-child(odd){grid-column:1/-1}
 @media (prefers-reduced-motion:reduce){.galeri-item img{transition:none}}
