@@ -401,3 +401,8 @@ html[data-device="hp"] .hdr-in > .ikon{justify-self:start}
 html[data-device="hp"] .hdr-kanan{justify-self:end}
 html[data-device="hp"] .brand{position:static;left:auto;transform:none;justify-self:center;gap:6px;font-size:14px}
 html[data-device="hp"] .brand img{width:24px;height:24px}
+
+/* [PATCH-KOSONG] Kotak foto kosong dibuat jelas terlihat (terang & gelap) */
+.galeri-kosong,.promo-kosong{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--surface-2);outline:2px dashed var(--ink-3);outline-offset:-8px}
+.galeri-kosong::after,.promo-kosong::after{content:"Foto belum diunggah";font-size:13px;font-weight:500;color:var(--ink-3)}
+.galeri-item.galeri-kosong img,.promo-item.promo-kosong img{opacity:.7}
