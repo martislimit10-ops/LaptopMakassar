@@ -410,3 +410,13 @@ html, body {
   touch-action: pan-y;
   overflow-x: hidden;
 }
+/* Kunci header/menu utama agar tetap menempel di atas saat digulir */
+header, 
+.header, 
+.navbar, 
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  width: 100%;
+}
