@@ -103,6 +103,18 @@ function tutupSidebar(fokus = true) {
   if (fokus) btnMenu.focus();
 }
 btnMenu.addEventListener('click', bukaSidebar);
+
+/* [PATCH-HEADER] Perilaku navigasi laptop (aman: tidak melakukan apa-apa jika elemen tidak ada) */
+(function () {
+  const nav = document.querySelector('.hdr-nav');
+  if (!nav) return;
+  nav.addEventListener('click', e => {
+    const go = e.target.closest('[data-goto]');
+    if (go) { e.preventDefault(); gulirKe(go.dataset.goto); }
+  });
+  const tema = document.getElementById('btnTemaHdr');
+  if (tema) tema.addEventListener('click', () => setTema(saklar.getAttribute('aria-checked') !== 'true'));
+})();
 $('#btnTutupMenu').addEventListener('click', () => tutupSidebar());
 scrim.addEventListener('click', () => tutupSidebar());
 sidebar.addEventListener('click', e => {
@@ -221,36 +233,26 @@ function pasangGeser(el, aksi) {
   el.addEventListener('pointercancel', () => { x0 = null; });
 }
 
-/* ---------- 5. Slider foto "Kunjungi toko kami" (maks. 5) ---------- */
-const toko = { fotos: [], idx: 0, timer: null, sig: '' };
+/* ---------- 5. Galeri "Kunjungi toko kami" (3-4 slot, dikelola dari admin) [PATCH-GALERI] ---------- */
+const GALERI_MAKS = 4, GALERI_MIN = 3;
+const galeri = { sig: '' };
+/* Nama fungsi sengaja dipertahankan agar pemanggil lama (muatSemua & bagian Mulai) tetap jalan */
 function renderSliderToko() {
-  const l = BANNER.filter(b => b.bagian === 'toko' && b.jenis === 'foto').slice(0, 5);
+  const root = $('#galeriToko'); if (!root) return;
+  const l = BANNER.filter(b => b.bagian === 'toko' && b.jenis === 'foto').slice(0, GALERI_MAKS);
   const sig = JSON.stringify(l.map(b => [b.id, b.url, b.judul, b.urutan]));
-  if (sig === toko.sig) return;
-  toko.sig = sig; toko.fotos = l; toko.idx = 0;
-  const root = $('#tokoSlider');
-  if (!l.length) {
-    $('#tokoTrack').innerHTML = `<div><img src="images/img-01.jpg" alt="Tampak depan toko Laptop Makassar" ${fotoErr}></div>`;
-    $('#tokoDots').innerHTML = ''; $$('.tslider-prev,.tslider-next', root).forEach(b => b.hidden = true);
-    clearTimeout(toko.timer); return;
+  if (sig === galeri.sig) return;
+  galeri.sig = sig;
+  const slot = Math.max(GALERI_MIN, l.length);
+  let html = '';
+  for (let i = 0; i < slot; i++) {
+    const b = l[i];
+    html += b
+      ? `<figure class="galeri-item"><img src="${esc(b.url)}" alt="${esc(b.judul || 'Foto toko Laptop Makassar')}" loading="lazy" ${fotoErr}>${b.judul ? `<figcaption>${esc(b.judul)}</figcaption>` : ''}</figure>`
+      : `<figure class="galeri-item galeri-kosong"><img src="${window.FOTO_KOSONG}" alt="" loading="lazy"></figure>`;
   }
-  $('#tokoTrack').innerHTML = l.map((b, i) => `<div><img src="${esc(b.url)}" alt="${esc(b.judul || 'Foto toko Laptop Makassar')}" ${i ? 'loading="lazy"' : ''} ${fotoErr}></div>`).join('');
-  $('#tokoDots').innerHTML = l.length > 1 ? l.map((_, i) => `<button type="button" aria-label="Foto ${i + 1}" data-i="${i}"></button>`).join('') : '';
-  $$('.tslider-prev,.tslider-next', root).forEach(b => b.hidden = l.length < 2);
-  tokoKe(0);
+  root.innerHTML = html;
 }
-function tokoKe(i) {
-  const n = toko.fotos.length; if (!n) return;
-  toko.idx = ((i % n) + n) % n;
-  $('#tokoTrack').style.transform = `translateX(-${toko.idx * 100}%)`;
-  $$('#tokoDots button').forEach((b, k) => b.setAttribute('aria-current', String(k === toko.idx)));
-  clearTimeout(toko.timer);
-  if (n > 1 && !kurangGerak()) toko.timer = setTimeout(() => tokoKe(toko.idx + 1), 5000);
-}
-$('#tokoSlider .tslider-prev').addEventListener('click', () => tokoKe(toko.idx - 1));
-$('#tokoSlider .tslider-next').addEventListener('click', () => tokoKe(toko.idx + 1));
-$('#tokoDots').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) tokoKe(+b.dataset.i); });
-pasangGeser($('#tokoSlider'), d => tokoKe(toko.idx + d));
 
 /* ---------- 6. Halaman Toko (#toko) ---------- */
 const storePage = $('#storePage'), storeSelect = $('#storeKategori'), storeCari = $('#storeCari');
@@ -504,21 +506,21 @@ function cariLokal(q) {
     hasil: hasil.map(x => ({ id: String(x.p.id), alasan: [x.p.spek?.processor, x.p.spek?.ram && `RAM ${x.p.spek.ram}`, x.p.spek?.storage].filter(Boolean).join(', ') }))
   };
 }
-let nomorCari = 0;
-async function jalankanCari() {
-  const q = cariInput.value.trim(); if (!q) { cariInput.focus(); return; }
-  const no = ++nomorCari;
-  cariHasil.innerHTML = '<div class="cari-muat"><span class="putar"></span>Mencari laptop yang cocok...</div>';
-  await siapProduk;
-  let data;
-  try {
-    const r = await sb.functions.invoke('cari-ai', { body: { q } });
-    if (r.error || !r.data || r.data.error) throw r.error || new Error(r.data?.error || 'kosong');
-    data = r.data;
-  } catch (e) { console.warn('Pencarian AI gagal, memakai pencarian lokal:', e); data = cariLokal(q); }
-  if (no !== nomorCari) return;
-  const l = (data.hasil || []).map(h => ({ p: cariProduk(h.id), alasan: h.alasan })).filter(x => x.p);
-  cariHasil.innerHTML = `<p class="cari-ring">${esc(data.ringkasan || '')}</p>` + (l.length ? l.map(({ p, alasan }) => `
+/* [PATCH-CHATBOT] Chatbot percakapan (Gemini lewat Edge Function "cari-ai", mode riwayat) */
+const chat = { riwayat: [], sibuk: false };   // riwayat: [{ role: 'user' | 'model', text }]
+const CHAT_MAKS_RIWAYAT = 10;
+function gulirChat() { const b = cariHasil.closest('.dlg-body'); if (b) b.scrollTop = b.scrollHeight; }
+function gelembung(role, teks) {
+  const d = document.createElement('div');
+  d.className = 'gel ' + (role === 'user' ? 'gel-user' : 'gel-bot');
+  d.textContent = teks;                       /* textContent: aman dari XSS */
+  cariHasil.appendChild(d); gulirChat();
+}
+function kartuChat(daftar) {
+  const l = (daftar || []).map(h => ({ p: cariProduk(h.id), alasan: h.alasan })).filter(x => x.p);
+  if (!l.length) return;
+  const w = document.createElement('div'); w.className = 'gel-kartu';
+  w.innerHTML = l.map(({ p, alasan }) => `
     <div class="cari-kartu">
       <div class="kr-foto"><img src="${esc(p.foto)}" alt="" ${fotoErr}></div>
       <div>
@@ -530,8 +532,48 @@ async function jalankanCari() {
           <button type="button" class="btn btn-kecil" data-tambah="${esc(p.id)}">Tambah</button>
         </div>
       </div>
-    </div>`).join('') : '<p class="kecil">Belum ada yang cocok. Coba ubah anggaran atau kebutuhanmu.</p>');
+    </div>`).join('');
+  cariHasil.appendChild(w); gulirChat();
 }
+async function jalankanCari() {
+  const q = cariInput.value.trim();
+  if (!q) { cariInput.focus(); return; }
+  if (chat.sibuk) return;
+  chat.sibuk = true; $('#cariKirim').disabled = true;
+  cariInput.value = '';
+  gelembung('user', q);
+  const ketik = document.createElement('div');
+  ketik.className = 'gel gel-bot gel-ketik'; ketik.innerHTML = '<span></span><span></span><span></span>';
+  cariHasil.appendChild(ketik); gulirChat();
+  try {
+    await siapProduk;
+    const kirim = chat.riwayat.concat({ role: 'user', text: q }).slice(-CHAT_MAKS_RIWAYAT);
+    let data;
+    try {
+      /* "q" ikut dikirim agar Edge Function versi lama tetap bisa menjawab (mode pencarian) */
+      const r = await sb.functions.invoke('cari-ai', { body: { q, riwayat: kirim } });
+      if (r.error || !r.data || r.data.error) throw r.error || new Error(r.data?.error || 'kosong');
+      data = r.data;
+    } catch (e) {
+      console.warn('Chatbot AI gagal, memakai pencarian lokal:', e);
+      const lokal = cariLokal(q);
+      data = {
+        jawaban: lokal.hasil.length ? 'Asisten AI sedang sibuk kak. Ini hasil pencarian cepat dari stok kami:' : 'Maaf kak, asisten AI sedang tidak tersedia. Silakan tanya langsung lewat WhatsApp ya.',
+        rekomendasi: lokal.hasil
+      };
+    }
+    ketik.remove();
+    const jawaban = String(data.jawaban || data.ringkasan || '').trim() || 'Maaf kak, saya belum bisa menjawab itu.';
+    gelembung('model', jawaban);
+    kartuChat(data.rekomendasi || data.hasil);
+    chat.riwayat = chat.riwayat.concat({ role: 'user', text: q }, { role: 'model', text: jawaban }).slice(-CHAT_MAKS_RIWAYAT);
+  } finally {
+    if (ketik.parentNode) ketik.remove();
+    chat.sibuk = false; $('#cariKirim').disabled = false; cariInput.focus();
+  }
+}
+gelembung('model', 'Halo kak! Saya asisten Laptop Makassar. Boleh tanya soal rekomendasi laptop sesuai budget, gaming atau edit video, perbandingan spek, garansi, sampai jam buka toko. Mau cari laptop yang seperti apa?');
+
 cariHasil.addEventListener('click', e => {
   const t = e.target.closest('[data-tambah]'); if (t) { tambahKeranjang(t.dataset.tambah); return; }
   const o = e.target.closest('[data-open]'); if (o) { dialogCari.close(); bukaDetail(o.dataset.open); }

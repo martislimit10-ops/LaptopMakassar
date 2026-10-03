@@ -292,3 +292,58 @@ html[data-device="hp"] .dlg{margin:auto auto 0;width:min(100%,var(--kolom));max-
   html[data-device="desktop"] .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
   html[data-device="desktop"] .foot-grid{grid-template-columns:1fr 1fr}
 }
+
+/* [PATCH-GALERI] Layout: 2 foto sedang di atas, 1 besar di tengah, 1 memanjang di bawah. Tiap kotak terpisah oleh gap. */
+.galeri{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:1100px;margin:0 auto}
+.galeri-item{position:relative;min-width:0;margin:0;overflow:hidden;border:1px solid var(--garis);border-radius:var(--r);background:var(--surface-2);aspect-ratio:4/3}
+.galeri-item:nth-child(3){grid-column:1/-1;aspect-ratio:16/9}
+.galeri-item:nth-child(4){grid-column:1/-1;aspect-ratio:21/9}
+.galeri-item img{width:100%;height:100%;object-fit:cover;transition:transform .35s ease}
+.galeri-item figcaption{position:absolute;left:0;right:0;bottom:0;padding:22px 14px 12px;font-size:13px;font-weight:500;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.6))}
+@media (hover:hover) and (pointer:fine){.galeri{gap:18px}.galeri-item:hover img{transform:scale(1.04)}}
+@media (prefers-reduced-motion:reduce){.galeri-item img{transition:none}}
+
+/* [PATCH-CHATBOT] Tampilan bubble chat */
+.dlg-chat{height:min(680px,calc(var(--vh100,100svh) - 32px))}
+html[data-device="desktop"] .dlg-chat{margin-top:auto}
+.chat-isi{padding:16px;background:var(--bg)}
+.chat-alur{display:flex;flex-direction:column;gap:10px}
+.gel{max-width:86%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;animation:gelMasuk .2s ease}
+.gel-bot{align-self:flex-start;background:var(--surface-2);border:1px solid var(--garis);border-bottom-left-radius:6px}
+.gel-user{align-self:flex-end;background:var(--aksen);color:var(--aksen-ink);border-bottom-right-radius:6px}
+.gel-ketik{display:flex;align-items:center;gap:5px;padding:14px 16px}
+.gel-ketik span{width:7px;height:7px;border-radius:50%;background:var(--ink-3);animation:gelKetik 1s infinite ease-in-out}
+.gel-ketik span:nth-child(2){animation-delay:.15s}
+.gel-ketik span:nth-child(3){animation-delay:.3s}
+.gel-kartu{align-self:flex-start;width:min(100%,380px);display:grid;gap:8px}
+.chat-alur .cari-kartu{background:var(--surface)}
+.chat-foot{gap:8px;padding:10px 12px 12px}
+.chat-foot .chips{margin:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.chat-foot .chips::-webkit-scrollbar{display:none}
+.chat-foot .chip{flex:none;white-space:nowrap}
+.chat-foot .cari-baris{margin-top:0}
+@keyframes gelMasuk{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes gelKetik{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+
+/* =====================================================================
+   [PATCH-HEADER] Header laptop berbasis perangkat keras (mouse/trackpad)
+   HP dan "Desktop Site" di HP: hover:none + pointer:coarse, jadi blok ini
+   tidak pernah aktif dan header HP tetap seperti semula.
+   ===================================================================== */
+.hdr-nav{display:none}
+
+@media (hover:hover) and (pointer:fine){
+  html:not([data-device="hp"]) #btnMenu{display:none}
+  html:not([data-device="hp"]) .hdr-in{justify-content:flex-start;gap:8px}
+  html:not([data-device="hp"]) .hdr-nav{display:flex;order:1;flex:1;min-width:0;align-items:center;justify-content:center;gap:4px}
+  html:not([data-device="hp"]) .hdr-kanan{order:2}
+  html:not([data-device="hp"]) .brand{order:3;position:static;left:auto;transform:none;margin-left:20px}
+  html:not([data-device="hp"]) .hdr-nav a,
+  html:not([data-device="hp"]) .hdr-nav button{padding:8px 12px;border:0;border-radius:10px;background:none;font-size:14px;font-weight:500;color:var(--ink-2);white-space:nowrap}
+  html:not([data-device="hp"]) .hdr-nav a:hover,
+  html:not([data-device="hp"]) .hdr-nav button:hover{background:var(--surface-2);color:var(--ink)}
+}
+@media (hover:hover) and (pointer:fine) and (max-width:1000px){
+  html:not([data-device="hp"]) .hdr-nav a,
+  html:not([data-device="hp"]) .hdr-nav button{padding:8px 8px;font-size:13px}
+}

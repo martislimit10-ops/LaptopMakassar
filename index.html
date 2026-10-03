@@ -78,6 +78,17 @@
         <span>Laptop Makassar</span>
       </a>
 
+      <!-- [PATCH-HEADER] Navigasi laptop. Tersembunyi di HP; hanya tampil lewat CSS pointer query -->
+      <nav class="hdr-nav" aria-label="Navigasi utama">
+        <a href="#toko">Toko</a>
+        <a href="#lokasi" data-goto="#lokasi">Kunjungi Toko</a>
+        <a data-ig target="_blank" rel="noopener">Instagram</a>
+        <a data-tt target="_blank" rel="noopener">TikTok</a>
+        <a data-wa target="_blank" rel="noopener">Contact</a>
+        <button type="button" id="btnTemaHdr" aria-label="Ganti mode gelap atau terang">Tema</button>
+        <a href="admin.html">Login Admin</a>
+      </nav>
+
       <div class="hdr-kanan">
         <button type="button" id="btnCari" class="ikon" aria-label="Cari laptop dengan AI"><svg><use href="#i-search"/></svg></button>
         <button type="button" id="btnToko" class="ikon" aria-label="Buka toko dan keranjang">
@@ -113,35 +124,8 @@
     <section id="lokasi" class="blok">
       <div class="wadah">
         <h2 class="judul">Kunjungi toko kami</h2>
-        <div class="lokasi-grid">
-          <div id="tokoSlider" class="tslider" aria-roledescription="carousel" aria-label="Foto toko">
-            <div class="tslider-track" id="tokoTrack"></div>
-            <button type="button" class="bulat tslider-prev" aria-label="Foto sebelumnya" hidden><svg><use href="#i-chev-l"/></svg></button>
-            <button type="button" class="bulat tslider-next" aria-label="Foto berikutnya" hidden><svg><use href="#i-chev-r"/></svg></button>
-            <div class="tslider-dots" id="tokoDots"></div>
-          </div>
-
-          <div class="lokasi-info">
-            <div class="info-baris">
-              <svg class="ik"><use href="#i-pin"/></svg>
-              <div>
-                <h3>Alamat</h3>
-                <p data-fill="alamat"></p>
-                <a data-maps target="_blank" rel="noopener" class="tautan">Buka di Google Maps</a>
-              </div>
-            </div>
-            <div class="info-baris">
-              <svg class="ik"><use href="#i-clock"/></svg>
-              <div>
-                <h3>Jam operasional</h3>
-                <p data-fill="jam"></p>
-              </div>
-            </div>
-            <div class="peta">
-              <iframe id="peta" title="Lokasi Laptop Makassar di Google Maps" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
-            </div>
-          </div>
-        </div>
+        <!-- [PATCH-GALERI] Galeri 3-4 foto, diisi dari tab "Slider Toko" di admin -->
+        <div id="galeriToko" class="galeri" aria-label="Galeri foto toko"></div>
       </div>
     </section>
   </main>
@@ -260,21 +244,26 @@
 </dialog>
 
 <!-- ============ PENCARIAN AI ============ -->
-<dialog id="cari" class="dlg dlg-cari" aria-labelledby="cariJudul">
-  <div class="dlg-head"><h2 id="cariJudul">Cari laptop dengan AI</h2><button type="button" class="ikon" data-tutup aria-label="Tutup"><svg><use href="#i-close"/></svg></button></div>
-  <div class="dlg-body">
-    <p class="kecil">Ceritakan kebutuhan dan anggaranmu, nanti kami carikan yang paling cocok dari stok toko.</p>
-    <div class="cari-baris">
-      <label class="sr" for="cariInput">Kebutuhan laptop</label>
-      <input id="cariInput" type="text" class="field" maxlength="200" placeholder="Contoh: laptop di bawah 7 juta buat edit video" autocomplete="off">
-      <button type="button" id="cariKirim" class="btn">Cari</button>
-    </div>
+<dialog id="cari" class="dlg dlg-cari dlg-chat" aria-labelledby="cariJudul">
+  <div class="dlg-head"><h2 id="cariJudul">Asisten AI Laptop Makassar</h2><button type="button" class="ikon" data-tutup aria-label="Tutup"><svg><use href="#i-close"/></svg></button></div>
+  <!-- [PATCH-CHATBOT] Aliran pesan (bubble chat) -->
+  <div class="dlg-body chat-isi">
+    <div id="cariHasil" class="chat-alur" role="log" aria-live="polite"></div>
+  </div>
+  <!-- Saran cepat + kolom ketik -->
+  <div class="dlg-foot chat-foot">
     <div class="chips" id="cariContoh">
       <button type="button" class="chip">Laptop di bawah 5 juta untuk kuliah</button>
       <button type="button" class="chip">Laptop gaming budget 8 juta</button>
-      <button type="button" class="chip">MacBook untuk desain</button>
+      <button type="button" class="chip">Rekomendasi laptop untuk edit video</button>
+      <button type="button" class="chip">Bagaimana garansi toko?</button>
+      <button type="button" class="chip">Jam buka toko?</button>
     </div>
-    <div id="cariHasil" class="cari-hasil" aria-live="polite"></div>
+    <div class="cari-baris">
+      <label class="sr" for="cariInput">Pesan untuk asisten</label>
+      <input id="cariInput" type="text" class="field" maxlength="300" placeholder="Tulis pertanyaanmu di sini..." autocomplete="off">
+      <button type="button" id="cariKirim" class="btn">Kirim</button>
+    </div>
   </div>
 </dialog>
 

@@ -97,8 +97,8 @@ const KONFIG_MEDIA = {
     info: 'Tampil di laptop/PC. Gunakan foto/video LANDSCAPE 16:9 (contoh 1920×1080).' },
   hero_hp: { judul: 'Media Hero HP', maks: 8, video: true, rasio: 'r-hp',
     info: 'Tampil di HP. Gunakan foto/video POTRET 9:16 (contoh 1080×1920).' },
-  toko: { judul: 'Slider "Kunjungi Toko Kami"', maks: 5, video: false, rasio: '',
-    info: 'Khusus foto, maksimal 5. Rasio 16:10 disarankan (contoh 1600×1000).' }
+  toko: { judul: 'Galeri "Kunjungi Toko Kami"', maks: 4, video: false, rasio: '',
+    info: 'Khusus foto, maksimal 4. Foto 1 & 2 tampil di baris atas, foto 3 besar di tengah, foto 4 memanjang di bawah. Pakai foto landscape beresolusi tinggi (min. lebar 1600 px).' }
 };
 
 function buatManajerMedia(root, bagian) {
@@ -190,7 +190,7 @@ function buatManajerMedia(root, bagian) {
     if (aktifJumlah() > cfg.maks) return setPesan(elPesan, `Maksimal ${cfg.maks} slide.`, true);
     sibuk = true; btnSimpan.disabled = true; setPesan(elPesan, 'Menyimpan...');
     try {
-      /* 1) hapus  2) ubah yang lama  3) unggah + tambah yang baru (urutan ini menjaga batas 5 foto toko) */
+      /* 1) hapus  2) ubah yang lama  3) unggah + tambah yang baru (urutan ini menjaga batas 4 foto toko) */
       for (const x of items.filter(x => x.hapus && x.id)) {
         const { error } = await sb.from('banner').delete().eq('id', x.id); if (error) throw error;
         await hapusFileStorage(x.url);
