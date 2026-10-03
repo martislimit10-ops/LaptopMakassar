@@ -158,8 +158,8 @@ function renderHero() {
     if (heroCap) heroCap.textContent = '';
     return;
   }
-  heroTrack.innerHTML = l.map((b, i) => `<div class="hero-slide" aria-hidden="${i !== 0}">` + (b.jenis === 'video'
-    ? `<video src="${esc(b.url)}" muted playsinline preload="${i === 0 ? 'auto' : 'metadata'}" ${l.length === 1 ? 'loop' : ''}></video>`
+heroTrack.innerHTML = l.map((b, i) => `<div class="hero-slide" aria-hidden="${i !== 0}">` + (b.jenis === 'video'
+    ? `<video src="${esc(b.url)}" autoplay muted loop playsinline preload="auto"></video>`
     : `<img src="${esc(b.url)}" alt="${esc(b.judul || 'Promo Laptop Makassar')}" ${i === 0 ? '' : 'loading="lazy"'} ${fotoErr}>`) + `</div>`).join('');
   $$('video', heroTrack).forEach((v, i) => {
     v.addEventListener('ended', () => { if (hero.slides.length > 1) heroKe(hero.idx + 1); });
