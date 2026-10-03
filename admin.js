@@ -1,7 +1,7 @@
 /* =====================================================================
    LAPTOP MAKASSAR - PANEL ADMIN
    Butuh: supabase-js -> supabase-config.js -> admin.js
-   Tab: Hero Desktop, Hero HP, Slider Toko, Info & Kontak, Produk.
+   Tab: Hero Desktop, Hero HP, Foto Toko, Promo 1, Promo 2, Info & Kontak, Produk.
    Sekali klik "Simpan" -> data masuk Supabase -> halaman depan
    terbarui otomatis (realtime), tanpa mengubah file di GitHub.
    ===================================================================== */
@@ -89,7 +89,7 @@ tabs.forEach((t, i) => {
 });
 
 /* =====================================================================
-   MANAJER MEDIA (dipakai 3 tab: hero_desktop, hero_hp, toko)
+   MANAJER MEDIA (dipakai 5 tab: hero_desktop, hero_hp, toko, promo, promo2)
    Perubahan ditampung dulu, baru dikirim saat klik "Simpan".
    ===================================================================== */
 const KONFIG_MEDIA = {
@@ -97,8 +97,12 @@ const KONFIG_MEDIA = {
     info: 'Tampil di laptop/PC. Gunakan foto/video LANDSCAPE 16:9 (contoh 1920×1080).' },
   hero_hp: { judul: 'Media Hero HP', maks: 8, video: true, rasio: 'r-hp',
     info: 'Tampil di HP. Gunakan foto/video POTRET 9:16 (contoh 1080×1920).' },
-  toko: { judul: 'Galeri "Kunjungi Toko Kami"', maks: 4, video: false, rasio: '',
-    info: 'Khusus foto, maksimal 4. Foto 1 & 2 tampil di baris atas, foto 3 besar di tengah, foto 4 memanjang di bawah. Pakai foto landscape beresolusi tinggi (min. lebar 1600 px).' }
+  toko: { judul: 'Foto "Kunjungi Toko Kami"', maks: 4, video: false, rasio: '',
+    info: 'Khusus foto, maksimal 4. Tampil turun ke bawah di HP (lebar penuh) dan 2 kolom di laptop. Foto tampil utuh, tidak dipotong. Pakai foto beresolusi tinggi (min. lebar 1600 px).' },
+  promo: { judul: 'Slide Promo 1 (Promo Saat Ini)', maks: 10, video: false, rasio: '',
+    info: 'Khusus foto atau infografis, maksimal 10. Tampil sebagai slide geser dan utuh tidak dipotong. Disarankan POTRET 4:5 (contoh 1080x1350).' },
+  promo2: { judul: 'Slide Promo 2 (di bawah Promo 1)', maks: 10, video: false, rasio: '',
+    info: 'Khusus foto atau infografis, maksimal 10. Tampil sebagai slide geser kedua tepat di bawah Promo 1. Disarankan POTRET 4:5 (contoh 1080x1350).' }
 };
 
 function buatManajerMedia(root, bagian) {
