@@ -394,3 +394,10 @@ html[data-device="desktop"] .dlg-chat{margin-top:auto}
 }
 .galeri-item:last-child:nth-child(odd){grid-column:1/-1}
 @media (prefers-reduced-motion:reduce){.galeri-item img{transition:none}}
+
+/* [PATCH-HEADER-TENGAH] HP: logo + nama tepat di tengah (kolom kiri dan kanan sama lebar), sedikit lebih kecil */
+html[data-device="hp"] .hdr-in{display:grid;grid-template-columns:1fr auto 1fr;justify-content:normal}
+html[data-device="hp"] .hdr-in > .ikon{justify-self:start}
+html[data-device="hp"] .hdr-kanan{justify-self:end}
+html[data-device="hp"] .brand{position:static;left:auto;transform:none;justify-self:center;gap:6px;font-size:14px}
+html[data-device="hp"] .brand img{width:24px;height:24px}
