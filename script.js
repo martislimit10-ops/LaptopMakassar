@@ -175,13 +175,12 @@ function heroKe(i, awal = false) {
   if (!awal) hero.jeda = false;
   hero.idx = ((i % n) + n) % n;
   heroTrack.style.transform = `translateX(-${hero.idx * 100}%)`;
-  $$('.hero-slide', heroTrack).forEach((s, k) => s.setAttribute('aria-hidden', String(k !== hero.idx)));
-  $$('#heroBars button').forEach((b, k) => b.setAttribute('aria-current', String(k === hero.idx)));
+  $$('.hero-slide', heroTrack).forEach((s, k) => s.setAttribute('aria-hidden', String(k !== hero.idx)));$$
+('#heroBars button').forEach((b, k) => b.setAttribute('aria-current', String(k === hero.idx)));
   const s = slideAktif();
   $('#heroCap').textContent = s.judul || '';
   /* kontrol jeda/suara HANYA untuk slide video; slide foto tanpa kontrol */
-  $('#heroKontrol').hidden = s.jenis !== 'video';
-  $$('video', heroTrack).forEach(v => { v.pause(); v.currentTime = 0; v.muted = !hero.suara; });
+  $('#heroKontrol').hidden = s.jenis !== 'video';   $$('video', heroTrack).forEach(v => { v.pause(); v.currentTime = 0; v.muted = !hero.suara; });
   perbaruiIkonHero();
   clearTimeout(hero.timer);
   if (s.jenis === 'video') {
@@ -210,9 +209,7 @@ $('#heroJeda').addEventListener('click', () => {
   if (hero.jeda) v.pause(); else v.play().catch(() => {});
   perbaruiIkonHero();
 });
-$('#heroSuara').addEventListener('click', () => {
-  hero.suara = !hero.suara;
-  $$('video', heroTrack).forEach(v => { v.muted = !hero.suara; });
+$('#heroSuara').addEventListener('click', () => {   hero.suara = !hero.suara;   $$('video', heroTrack).forEach(v => { v.muted = !hero.suara; });
   perbaruiIkonHero();
 });
 $('#heroPrev').addEventListener('click', () => heroKe(hero.idx - 1));
@@ -277,8 +274,7 @@ function tutupToko() {
 }
 window.addEventListener('hashchange', sinkronToko);
 $('#btnToko').addEventListener('click', bukaToko);
-$('#storeBack').addEventListener('click', tutupToko);
-$$('a[href="#toko"]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); bukaToko(); }));
+$('#storeBack').addEventListener('click', tutupToko); $$('a[href="#toko"]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); bukaToko(); }));
 
 storeSelect.innerHTML =
   '<option value="all">Semua laptop</option>' +
@@ -397,8 +393,7 @@ function renderKeranjang() {
   const l = isiKeranjang();
   const jumlah = l.reduce((s, x) => s + x.qty, 0);
   const total = l.reduce((s, x) => s + x.p.harga * x.qty, 0);
-  $$('[data-badge]').forEach(b => { b.textContent = jumlah; b.hidden = !jumlah; });
-  $('#cartbar').hidden = !jumlah;
+  $$('[data-badge]').forEach(b => { b.textContent = jumlah; b.hidden = !jumlah; });$('#cartbar').hidden = !jumlah;
   $('#cbJumlah').textContent = `${jumlah} item`;
   $('#cbTotal').textContent = rupiah(total);
   $('#krTotal').textContent = rupiah(total);
