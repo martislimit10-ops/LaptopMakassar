@@ -347,3 +347,33 @@ html[data-device="desktop"] .dlg-chat{margin-top:auto}
   html:not([data-device="hp"]) .hdr-nav a,
   html:not([data-device="hp"]) .hdr-nav button{padding:8px 8px;font-size:13px}
 }
+
+/* ---------- Perbaikan Promo Responsive (Anti-Gepeng) ---------- */
+.card-promo-responsive {
+  min-width: 85%;
+  flex: 0 0 85%;
+  background: var(--bg-surface, #1e2025);
+  border: 1px solid var(--border-color, #2a2e39);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.card-promo-responsive img {
+  width: 100%;
+  height: 180px; /* Tinggi banner di HP supaya pas dan tidak gepeng */
+  object-fit: cover;
+  display: block;
+}
+
+/* Khusus untuk Laptop / Layar Besar */
+@media (min-width: 769px) {
+  .card-promo-responsive {
+    min-width: calc(50% - 10px);
+    flex: 0 0 calc(50% - 10px);
+    border-radius: 18px;
+  }
+  .card-promo-responsive img {
+    height: 320px; /* Tinggi banner di laptop */
+  }
+}
