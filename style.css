@@ -9,7 +9,11 @@
   --garis:#e5e7eb; --aksen:#1f2937; --aksen-ink:#fff;
   --merah:#9b1c1c; --hijau:#166534;
   --footer:#f1f2f4; --r:14px; --kolom:480px;
+  --vh100:100vh; /* [FIX-MOBILE] tinggi layar stabil, tidak berubah saat scroll */
 }
+@supports (height:100svh){:root{--vh100:100svh}}
+/* HP yang membuka "Desktop Site": kolom selebar layar (tanpa zoom) */
+html[data-skala="lebar"]{--kolom:100%}
 html[data-tema="gelap"]{
   --bg:#0f1115; --surface:#171a20; --surface-2:#1f232b;
   --ink:#f3f4f6; --ink-2:#c3c8d0; --ink-3:#9097a3;
@@ -20,6 +24,8 @@ html[data-tema="gelap"]{
 
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+/* [FIX-MOBILE] cegah halaman bergeser ke kanan; "clip" (bukan hidden) agar position:sticky tetap jalan */
+html,body{max-width:100%;overflow-x:clip}
 html.kunci{overflow:hidden}
 body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.55;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
 img,video,svg{display:block;max-width:100%}
@@ -65,7 +71,7 @@ html[data-tema="gelap"] .badge{color:#111827}
 .bulat svg{width:18px;height:18px}
 
 /* ---------- Header (logo presisi di tengah) ---------- */
-.hdr{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--garis)}
+.hdr{position:-webkit-sticky;position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--garis)}
 .hdr-in{position:relative;height:60px;max-width:1600px;margin:0 auto;padding:0 8px;display:flex;align-items:center;justify-content:space-between}
 .brand{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;white-space:nowrap;font-size:15px;font-weight:600;letter-spacing:-.01em}
 .brand img{width:28px;height:28px;border-radius:8px;object-fit:cover}
@@ -129,7 +135,7 @@ html[data-tema="gelap"] .badge{color:#111827}
 
 /* ---------- Sidebar ---------- */
 .scrim{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45)}
-.sb{position:fixed;top:0;bottom:0;left:calc(50% - min(50%, 240px));z-index:70;width:min(320px,86%);display:flex;flex-direction:column;background:var(--bg);border-right:1px solid var(--garis);transform:translateX(-102%);transition:transform .25s ease;visibility:hidden}
+.sb{position:fixed;top:0;bottom:0;left:calc(50% - min(50%, calc(var(--kolom) / 2)));z-index:70;width:min(320px,86%);display:flex;flex-direction:column;background:var(--bg);border-right:1px solid var(--garis);transform:translateX(-102%);transition:transform .25s ease;visibility:hidden}
 .sb.buka{transform:none;visibility:visible}
 .sb-head{height:60px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 20px;border-bottom:1px solid var(--garis)}
 .sb-nama{font-weight:600}
@@ -149,7 +155,7 @@ a.sb-item:hover{background:var(--surface-2)}
 
 /* ---------- Halaman Toko ---------- */
 .store{position:fixed;inset:0;z-index:50;background:var(--bg);overflow-y:auto;overscroll-behavior:contain}
-html[data-device="hp"] .store{inset:0 auto 0 calc(50% - min(50%, 240px));width:min(100%,var(--kolom))}
+html[data-device="hp"] .store{inset:0 auto 0 calc(50% - min(50%, calc(var(--kolom) / 2)));width:min(100%,var(--kolom))}
 .store-top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--garis)}
 .store-bar{max-width:1600px;margin:0 auto;height:56px;padding:0 8px;display:flex;align-items:center;justify-content:space-between}
 .store-bar h2{position:absolute;left:50%;transform:translateX(-50%);font-size:16px;font-weight:600}
@@ -192,7 +198,7 @@ html[data-tema="gelap"] .lencana .promo{color:#111827}
 .cartbar small{opacity:.8;font-size:13px}
 .cb-aksi{display:flex;align-items:center;gap:4px;font-size:14px;font-weight:600}
 .cb-aksi svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2}
-html[data-device="hp"] .cartbar{left:calc(50% - min(50%,240px) + 12px);transform:none;width:min(calc(100% - 24px),calc(var(--kolom) - 24px))}
+html[data-device="hp"] .cartbar{left:calc(50% - min(50%, calc(var(--kolom) / 2)) + 12px);transform:none;width:min(calc(100% - 24px),calc(var(--kolom) - 24px))}
 
 /* ---------- Dialog ---------- */
 .dlg{padding:0;border:0;background:var(--surface);color:var(--ink);border-radius:18px;width:calc(100% - 24px);max-width:560px;max-height:calc(var(--vh100,100svh) - 32px);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}

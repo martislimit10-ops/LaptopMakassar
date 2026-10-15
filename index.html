@@ -21,13 +21,12 @@
     var hp = sentuh && Math.min(screen.width, screen.height) <= 600;
     d.setAttribute('data-device', hp ? 'hp' : 'desktop');
     window.LM_HP = hp;
-    /* Jika HP membuka "Desktop Site", lebar halaman ~980px. Skalakan kolom 480px agar pas layar, tidak melebar. */
+    /* [FIX-MOBILE] Tanpa zoom. Bila HP membuka "Desktop Site" (lebar halaman ~980px), kolom dibuat selebar layar
+       lewat atribut data-skala="lebar" (diatur di CSS). Tinggi layar TIDAK lagi dihitung dari innerHeight,
+       karena nilainya berubah saat address bar HP muncul/hilang dan membuat banner goyang. */
     window.aturSkala = function () {
-      var z = 1;
-      var potret = window.matchMedia('(orientation:portrait)').matches;
-      if (hp && potret && window.innerWidth > 520) z = window.innerWidth / 480;
-      d.style.zoom = z === 1 ? '' : String(z);
-      d.style.setProperty('--vh100', (window.innerHeight / z) + 'px');
+      if (hp && window.innerWidth > 520) d.setAttribute('data-skala', 'lebar');
+      else d.removeAttribute('data-skala');
     };
     window.aturSkala();
   })();
