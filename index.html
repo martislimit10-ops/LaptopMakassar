@@ -6,10 +6,12 @@
   <title>Laptop Makassar | Laptop Baru dan Bekas Berkualitas</title>
   <meta name="description" content="Toko laptop baru dan bekas berkualitas di Makassar dan Gowa. Semua unit dicek, bergaransi, harga jujur.">
   <meta name="theme-color" content="#fafafa">
-  <link rel="icon" href="images/logo.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Dijalankan sebelum halaman digambar: tema + deteksi HP (anti-kedip) -->
   <script>
@@ -34,6 +36,12 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+<!-- ============ LAYAR MUAT (loading screen) ============ -->
+<div id="splash" class="splash" aria-hidden="true">
+  <img class="logo-terang" src="images/logo-teknoa.png" alt="" width="816" height="95">
+  <img class="logo-gelap" src="images/logo-teknoa-gelap.png" alt="" width="816" height="95">
+</div>
 
 <!-- ============ IKON (sprite) ============ -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -68,16 +76,17 @@
   <!-- ============ HEADER ============ -->
   <header class="hdr">
     <div class="hdr-in">
-      <button type="button" id="btnMenu" class="ikon" aria-label="Buka menu" aria-expanded="false" aria-controls="sidebar">
-        <svg><use href="#i-menu"/></svg>
+      <!-- Ikon menu 2 garis: berubah jadi X saat menu terbuka -->
+      <button type="button" id="btnMenu" class="ikon ikon-menu" aria-label="Buka menu" aria-expanded="false" aria-controls="sidebar">
+        <span class="garis2" aria-hidden="true"><i></i><i></i></span>
       </button>
 
-      <a href="#" class="brand" aria-label="Laptop Makassar, ke atas">
-        <img src="images/logo.png" alt="" width="28" height="28">
-        <span>Laptop Makassar</span>
+      <a href="#" class="brand" aria-label="TEKNOA.ID, ke atas">
+        <img class="logo-terang" src="images/logo-teknoa.png" alt="TEKNOA.ID" width="816" height="95">
+        <img class="logo-gelap" src="images/logo-teknoa-gelap.png" alt="" width="816" height="95">
       </a>
 
-      <!-- [PATCH-HEADER] Navigasi laptop. Tersembunyi di HP; hanya tampil lewat CSS pointer query -->
+      <!-- Navigasi laptop (layar lebar). Di HP dipakai menu 2 garis. -->
       <nav class="hdr-nav" aria-label="Navigasi utama">
         <a href="#toko">Toko</a>
         <a href="#lokasi" data-goto="#lokasi">Kunjungi Toko</a>
@@ -87,6 +96,7 @@
       </nav>
 
       <div class="hdr-kanan">
+        <button type="button" id="btnTemaHdr" class="ikon ikon-tema" aria-label="Ganti mode gelap / terang"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16" /><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>
         <button type="button" id="btnCari" class="ikon" aria-label="Cari laptop dengan AI"><svg><use href="#i-search"/></svg></button>
         <button type="button" id="btnToko" class="ikon" aria-label="Buka toko dan keranjang">
           <svg><use href="#i-cart"/></svg>
@@ -118,8 +128,17 @@
     </section>
 
     <!-- ============ LOGO MEREK ============ -->
-    <section id="merek" class="blok blok-merek" aria-label="Merek laptop">
+    <section id="merek" class="blok blok-merek" aria-labelledby="merekJudul">
       <div class="wadah">
+        <div class="kepala">
+          <p class="eyebrow">Merek</p>
+          <h2 id="merekJudul" class="besar">Merek favoritmu. Satu toko.</h2>
+          <p class="isi-abu"><b>Dari ASUS sampai Apple,</b> laptop baru dan bekas dari merek yang sudah kamu kenal. Setiap unit kami cek dulu sebelum sampai ke tanganmu.</p>
+        </div>
+        <div class="stat-baris">
+          <div class="stat"><p class="stat-label">Merek laptop tersedia</p><p class="stat-angka"><span class="n" data-stat="merek">11</span></p></div>
+          <div class="stat"><p class="stat-label">Kategori, dari gaming sampai MacBook</p><p class="stat-angka"><span class="n" data-stat="kategori">6</span></p></div>
+        </div>
         <ul class="merek-list">
         <li class="merek-item"><img src="images/brands/asus.png" alt="" loading="lazy" onerror="if(!this.dataset.t){this.dataset.t=1;this.src='https://cdn.simpleicons.org/asus/111111'}else{this.remove()}"><span>ASUS</span></li>
         <li class="merek-item"><img src="images/brands/acer.png" alt="" loading="lazy" onerror="if(!this.dataset.t){this.dataset.t=1;this.src='https://cdn.simpleicons.org/acer/111111'}else{this.remove()}"><span>Acer</span></li>
@@ -137,16 +156,34 @@
     </section>
 
     <!-- ============ KUNJUNGI TOKO KAMI ============ -->
-    <section id="lokasi" class="blok">
-      <div class="wadah"></div>
+    <section id="lokasi" class="blok" aria-labelledby="lokasiJudul">
+      <div class="wadah">
+        <div class="kepala">
+          <p class="eyebrow">Lokasi</p>
+          <h2 id="lokasiJudul" class="besar">Datang. Lihat. Bawa pulang.</h2>
+          <p class="isi-abu"><b>Kunjungi toko kami di Gowa dan Makassar.</b> Coba unitnya langsung, tanya apa saja, lalu pulang dengan laptop yang pas untukmu.</p>
+        </div>
+        <div class="stat-baris">
+          <div class="stat"><p class="stat-label">Cabang, di Gowa dan Makassar</p><p class="stat-angka">2</p></div>
+          <div class="stat"><p class="stat-label">Unit dicek sebelum dijual</p><p class="stat-angka">100<span>%</span></p></div>
+        </div>
         <div id="galeriToko" class="galeri" aria-label="Galeri foto toko"></div>
       </div>
     </section>
 
     <!-- ============ PROMO SAAT INI (diisi dari tabel banner, bagian = promo) ============ -->
-    <section id="promo" class="blok">
+    <section id="promo" class="blok" aria-labelledby="promoJudul">
       <div class="wadah">
-        <h2 class="sr">Promo Saat Ini</h2>
+        <div class="kepala">
+          <p class="eyebrow">Promo</p>
+          <h2 id="promoJudul" class="besar">Promo saat ini.</h2>
+          <p class="isi-abu"><b>Penawaran pilihan dengan harga jujur.</b> Geser untuk melihat semua promo, lalu tanyakan stoknya langsung lewat WhatsApp.</p>
+        </div>
+        <div class="stat-baris">
+          <div class="stat" hidden><p class="stat-label">Unit siap dipilih di katalog</p><p class="stat-angka"><span class="n" data-stat="produk">0</span></p></div>
+          <div class="stat"><p class="stat-label">Garansi toko untuk unit baru</p><p class="stat-angka">1<span>tahun</span></p></div>
+          <div class="stat"><p class="stat-label">Garansi toko untuk unit bekas</p><p class="stat-angka">1<span>bulan</span></p></div>
+        </div>
         <div class="promo-wrap">
           <button type="button" class="promo-btn promo-prev" aria-label="Promo sebelumnya">&#10094;</button>
           <div id="promoList" class="promo-list" aria-label="Daftar promo"></div>
@@ -155,12 +192,34 @@
       </div>
     </section>
 
-    <section id="promo2" class="blok">
+    <!-- ============ PROMO 2 (bagian = promo2) ============ -->
+    <section id="promo2" class="blok" aria-labelledby="promo2Judul">
       <div class="wadah">
-        <h2 class="sr">Promo Lainnya</h2>
+        <div class="kepala">
+          <p class="eyebrow">Pilihan lainnya</p>
+          <h2 id="promo2Judul" class="besar">Ada yang pas untuk semua kebutuhan.</h2>
+          <p class="isi-abu"><b>Kuliah, kerja, sampai gaming.</b> Dari laptop harian sampai MacBook, semuanya sudah melewati pengecekan toko dan siap dipakai.</p>
+        </div>
         <div class="promo-wrap">
           <button type="button" class="promo-btn promo-prev" aria-label="Promo sebelumnya">&#10094;</button>
           <div id="promoList2" class="promo-list" aria-label="Daftar promo lainnya"></div>
+          <button type="button" class="promo-btn promo-next" aria-label="Promo berikutnya">&#10095;</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PROMO 3 (slot baru, bagian = promo3; tampil otomatis saat admin mengunggah foto) ============ -->
+    <section id="promo3" class="blok" aria-labelledby="promo3Judul" hidden>
+      <div class="wadah">
+        <div class="kepala">
+          <p class="eyebrow">Info terbaru</p>
+          <h2 id="promo3Judul" class="besar">Jangan sampai ketinggalan.</h2>
+          <p class="isi-abu"><b>Stok kami bergerak cepat.</b> Lihat penawaran terbaru di sini, lalu hubungi kami sebelum unit incaranmu habis.</p>
+          <a class="tautan-biru" data-wa target="_blank" rel="noopener">Tanya stok via WhatsApp <span aria-hidden="true">&rsaquo;</span></a>
+        </div>
+        <div class="promo-wrap">
+          <button type="button" class="promo-btn promo-prev" aria-label="Promo sebelumnya">&#10094;</button>
+          <div id="promoList3" class="promo-list" aria-label="Daftar promo terbaru"></div>
           <button type="button" class="promo-btn promo-next" aria-label="Promo berikutnya">&#10095;</button>
         </div>
       </div>
@@ -172,7 +231,10 @@
     <div class="wadah">
       <div class="foot-grid">
         <div>
-          <a href="#" class="foot-brand"><img src="images/logo.png" alt="" width="32" height="32"><span>Laptop Makassar</span></a>
+          <a href="#" class="foot-brand" aria-label="TEKNOA.ID, ke atas">
+            <img class="logo-terang" src="images/logo-teknoa.png" alt="TEKNOA.ID" width="816" height="95" loading="lazy">
+            <img class="logo-gelap" src="images/logo-teknoa-gelap.png" alt="" width="816" height="95" loading="lazy">
+          </a>
           <p class="foot-desk" data-fill="deskripsi"></p>
         </div>
         <div>
@@ -208,21 +270,32 @@
 </div>
 
 <!-- ============ SIDEBAR ============ -->
-<div id="scrim" class="scrim" hidden></div>
-<aside id="sidebar" class="sb" aria-label="Menu" aria-hidden="true" inert>
-  <div class="sb-head">
-    <span class="sb-nama">Menu</span>
-    <button type="button" id="btnTutupMenu" class="ikon" aria-label="Tutup menu"><svg><use href="#i-close"/></svg></button>
-  </div>
-  <nav class="sb-list">
-    <a href="#lokasi" data-goto="#lokasi" class="sb-item"><span class="t">Lokasi &amp; Jam Buka</span><span class="s" data-fill="jam"></span></a>
-    <a data-maps target="_blank" rel="noopener" class="sb-item"><span class="t">Buka di Google Maps</span></a>
-    <a data-ig target="_blank" rel="noopener" class="sb-item"><span class="t">Instagram</span><span class="s" data-ig-text></span></a>
-    <a data-tt target="_blank" rel="noopener" class="sb-item"><span class="t">TikTok</span><span class="s" data-tt-text></span></a>
-    <a data-wa target="_blank" rel="noopener" class="sb-item"><span class="t">Contact</span><span class="s">Chat WhatsApp CS</span></a>
-    <div class="sb-item sb-tema">
-      <span class="t" id="labelTema">Mode gelap</span>
-      <button type="button" id="saklarTema" class="saklar" role="switch" aria-checked="false" aria-labelledby="labelTema"><span></span></button>
+<!-- Menu layar penuh (dibuka tombol 2 garis di header) -->
+<aside id="sidebar" class="sb" aria-label="Menu utama" aria-hidden="true" inert>
+  <nav class="sb-nav" aria-label="Navigasi utama">
+    <ul class="sb-utama">
+      <li style="--i:0"><a href="#toko" class="sb-besar">Toko</a></li>
+      <li style="--i:1"><a href="#promo" data-goto="#promo" class="sb-besar">Promo</a></li>
+      <li style="--i:2"><a href="#merek" data-goto="#merek" class="sb-besar">Merek</a></li>
+      <li style="--i:3"><a href="#lokasi" data-goto="#lokasi" class="sb-besar">Lokasi</a></li>
+    </ul>
+
+    <div class="sb-grup" style="--i:4">
+      <p class="sb-label">Operasional</p>
+      <ul>
+        <li><a data-maps target="_blank" rel="noopener" class="sb-sedang">Maps</a></li>
+        <li><a data-ig target="_blank" rel="noopener" class="sb-sedang">Instagram</a></li>
+        <li><a data-tt target="_blank" rel="noopener" class="sb-sedang">TikTok</a></li>
+        <li><a data-wa target="_blank" rel="noopener" class="sb-sedang">Dukungan</a></li>
+      </ul>
+    </div>
+
+    <div class="sb-grup" style="--i:5">
+      <p class="sb-label">Contact</p>
+      <div class="sb-tema">
+        <span class="sb-sedang" id="labelTema">Mode Gelap</span>
+        <button type="button" id="saklarTema" class="saklar" role="switch" aria-checked="false" aria-labelledby="labelTema"><span></span></button>
+      </div>
     </div>
   </nav>
 </aside>
@@ -247,6 +320,11 @@
   </div>
 
   <div class="wadah store-isi">
+    <div class="kepala kepala-toko">
+      <p class="eyebrow">Katalog</p>
+      <h3 class="besar">Temukan laptop yang pas untukmu.</h3>
+      <p class="isi-abu"><b>Baru atau bekas,</b> semua unit dicek dan bergaransi toko. Pilih kategori, bandingkan spesifikasi, lalu checkout lewat WhatsApp.</p>
+    </div>
     <p id="status" class="status" aria-live="polite"></p>
     <div id="grid" class="grid"></div>
     <div id="more" class="more"></div>

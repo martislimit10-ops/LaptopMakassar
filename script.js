@@ -85,42 +85,29 @@ function setTema(gelap, simpan = true) {
 setTema(document.documentElement.getAttribute('data-tema') === 'gelap', false);
 saklar.addEventListener('click', () => setTema(saklar.getAttribute('aria-checked') !== 'true'));
 
-const sidebar = $('#sidebar'), scrim = $('#scrim'), btnMenu = $('#btnMenu');
+const sidebar = $('#sidebar'), btnMenu = $('#btnMenu');
 function bukaSidebar() {
-  scrim.hidden = false;
   sidebar.removeAttribute('inert'); sidebar.setAttribute('aria-hidden', 'false');
   requestAnimationFrame(() => sidebar.classList.add('buka'));
-  btnMenu.setAttribute('aria-expanded', 'true');
+  btnMenu.setAttribute('aria-expanded', 'true'); btnMenu.setAttribute('aria-label', 'Tutup menu');
   kunci(true);
-  $('#btnTutupMenu').focus();
+  const pertama = $('a', sidebar); if (pertama) pertama.focus({ preventScroll: true });
 }
 function tutupSidebar(fokus = true) {
   if (!sidebar.classList.contains('buka')) return;
-  sidebar.classList.remove('buka'); scrim.hidden = true;
+  sidebar.classList.remove('buka');
   sidebar.setAttribute('inert', ''); sidebar.setAttribute('aria-hidden', 'true');
-  btnMenu.setAttribute('aria-expanded', 'false');
+  btnMenu.setAttribute('aria-expanded', 'false'); btnMenu.setAttribute('aria-label', 'Buka menu');
   kunci(false);
   if (fokus) btnMenu.focus();
 }
-btnMenu.addEventListener('click', bukaSidebar);
-
-/* [PATCH-HEADER] Perilaku navigasi laptop (aman: tidak melakukan apa-apa jika elemen tidak ada) */
-(function () {
-  const nav = document.querySelector('.hdr-nav');
-  if (!nav) return;
-  nav.addEventListener('click', e => {
-    const go = e.target.closest('[data-goto]');
-    if (go) { e.preventDefault(); gulirKe(go.dataset.goto); }
-  });
-  const tema = document.getElementById('btnTemaHdr');
-  if (tema) tema.addEventListener('click', () => setTema(saklar.getAttribute('aria-checked') !== 'true'));
-})();
-$('#btnTutupMenu').addEventListener('click', () => tutupSidebar());
-scrim.addEventListener('click', () => tutupSidebar());
+/* Tombol 2 garis: satu tombol untuk buka dan tutup (berubah jadi X) */
+btnMenu.addEventListener('click', () => sidebar.classList.contains('buka') ? tutupSidebar(false) : bukaSidebar());
 sidebar.addEventListener('click', e => {
-  const go = e.target.closest('[data-goto]');
-  if (go) { e.preventDefault(); tutupSidebar(false); gulirKe(go.dataset.goto); }
-  else if (e.target.closest('a[target="_blank"]')) tutupSidebar(false);
+  const a = e.target.closest('a'); if (!a) return;
+  const go = a.dataset.goto;
+  tutupSidebar(false);                       /* semua tautan menutup menu; "Toko" dibuka oleh pengendali #toko */
+  if (go) { e.preventDefault(); gulirKe(go); }
 });
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
@@ -136,8 +123,8 @@ const IKON = id => `<svg><use href="#${id}"/></svg>`;
 function daftarHero() {
   const utama = DEVICE === 'hp' ? 'hero_hp' : 'hero_desktop';
   const cadangan = DEVICE === 'hp' ? 'hero_desktop' : 'hero_hp';
-  let l = BANNER.filter(b => b.bagian === utama);
-  if (!l.length) l = BANNER.filter(b => b.bagian === cadangan);
+  let l = BANNER.filter(b => b.bagian === utama && b.aktif !== false);
+  if (!l.length) l = BANNER.filter(b => b.bagian === cadangan && b.aktif !== false);
   return l;
 }
 function renderHero() {
@@ -233,53 +220,69 @@ function pasangGeser(el, aksi) {
   el.addEventListener('pointercancel', () => { x0 = null; });
 }
 
-/* ---------- 5. Galeri "Kunjungi toko kami" (3-4 slot, dikelola dari admin) [PATCH-GALERI] ---------- */
-const GALERI_MAKS = 4, GALERI_MIN = 3;
+/* ---------- 5. Galeri "Kunjungi toko kami" (maks. 4 foto, dikelola dari admin) [PATCH-GALERI] ---------- */
+const GALERI_MAKS = 4;
 const galeri = { sig: '' };
-/* Nama fungsi sengaja dipertahankan agar pemanggil lama (muatSemua & bagian Mulai) tetap jalan */
+/* Nama fungsi sengaja dipertahankan agar pemanggil lama (muatSemua & bagian Mulai) tetap jalan.
+   Hanya foto asli yang dirender: tidak ada lagi kotak kosong pengisi. */
 function renderSliderToko() {
   const root = $('#galeriToko'); if (!root) return;
-  const l = BANNER.filter(b => b.bagian === 'toko' && b.jenis === 'foto').slice(0, GALERI_MAKS);
+  const l = BANNER.filter(b => b.bagian === 'toko' && b.jenis === 'foto' && b.aktif !== false && b.url).slice(0, GALERI_MAKS);
   const sig = JSON.stringify(l.map(b => [b.id, b.url, b.judul, b.urutan]));
   if (sig === galeri.sig) return;
   galeri.sig = sig;
-  const slot = Math.max(GALERI_MIN, l.length);
-  let html = '';
-  for (let i = 0; i < slot; i++) {
-    const b = l[i];
-    html += b
-      ? `<figure class="galeri-item"><img src="${esc(b.url)}" alt="${esc(b.judul || 'Foto toko Laptop Makassar')}" loading="lazy" ${fotoErr}>${b.judul ? `<figcaption>${esc(b.judul)}</figcaption>` : ''}</figure>`
-      : `<figure class="galeri-item galeri-kosong"><img src="${window.FOTO_KOSONG}" alt="" loading="lazy"></figure>`;
-  }
-  root.innerHTML = html;
+  root.hidden = !l.length;
+  root.innerHTML = l.map(b => `<figure class="galeri-item"><img src="${esc(b.url)}" alt="${esc(b.judul || 'Foto toko Laptop Makassar')}" loading="lazy" ${fotoErr}>${b.judul ? `<figcaption>${esc(b.judul)}</figcaption>` : ''}</figure>`).join('');
 }
 
-/* ---------- 5b. Promo Saat Ini (bagian = 'promo' di tabel banner) [PATCH-PROMO] ---------- */
-const PROMO_MIN = 5;
-const promo = { sig: '' };
+/* ---------- 5b. Slider promo: Promo 1, Promo 2, Promo 3 (tabel banner, bagian = promo / promo2 / promo3) [PATCH-PROMO] ----------
+   Perbaikan: (1) hanya gambar asli dari Supabase yang menjadi slide, tanpa slide kosong pengisi;
+   (2) Promo 2 sekarang ikut dirender (dulu tidak pernah diisi); (3) kolom "aktif" dihormati;
+   (4) slide yang belum selesai dimuat tampil sebagai kerangka (skeleton), bukan kotak kosong. */
+const PROMO_BAGIAN = [
+  { bagian: 'promo',  list: '#promoList',  sec: '#promo',  sembunyiSemua: false },
+  { bagian: 'promo2', list: '#promoList2', sec: '#promo2', sembunyiSemua: true },
+  { bagian: 'promo3', list: '#promoList3', sec: '#promo3', sembunyiSemua: true }
+];
+const promoSig = {};
+const promoSlide = (b, i) => `<figure class="promo-item muat"><img src="${esc(b.url)}" alt="${esc(b.judul || 'Promo Laptop Makassar')}" decoding="async" ${i < 3 ? '' : 'loading="lazy"'} onload="this.parentNode.classList.remove('muat')" ${fotoErr}></figure>`;
 function renderPromo() {
-  const root = $('#promoList'); if (!root) return;
-  const l = BANNER.filter(b => b.bagian === 'promo' && b.jenis === 'foto');
-  const sig = JSON.stringify(l.map(b => [b.id, b.url, b.judul, b.urutan]));
-  if (sig === promo.sig) return;
-  promo.sig = sig;
-  const slot = Math.max(PROMO_MIN, l.length);
-  let html = '';
-  for (let i = 0; i < slot; i++) {
-    const b = l[i];
-    html += b
-      ? `<figure class="promo-item"><img src="${esc(b.url)}" alt="${esc(b.judul || 'Promo Laptop Makassar')}" ${i < 2 ? '' : 'loading="lazy"'} ${fotoErr}></figure>`
-      : `<figure class="promo-item promo-kosong"><img src="${window.FOTO_KOSONG}" alt="" loading="lazy"></figure>`;
-  }
-  root.innerHTML = html;
+  PROMO_BAGIAN.forEach(cfg => {
+    const root = $(cfg.list), sec = $(cfg.sec); if (!root || !sec) return;
+    const l = BANNER.filter(b => b.bagian === cfg.bagian && b.jenis === 'foto' && b.aktif !== false && b.url);
+    const sig = JSON.stringify(l.map(b => [b.id, b.url, b.judul, b.urutan]));
+    if (promoSig[cfg.bagian] === sig) return;
+    promoSig[cfg.bagian] = sig;
+    root.closest('.promo-wrap').hidden = !l.length;
+    if (cfg.sembunyiSemua) sec.hidden = !l.length;     /* slot kosong tidak tampil ke pengunjung */
+    root.innerHTML = l.map(promoSlide).join('');
+    root.scrollLeft = 0;
+    /* Gambar yang masih "lazy" dipaksa dimuat saat pengunjung mulai menggeser (atau setelah jeda singkat),
+       supaya slide berikutnya sudah siap dan tidak kosong. */
+    const siapkan = () => $$('img[loading="lazy"]', root).forEach(im => { im.loading = 'eager'; });
+    root.addEventListener('pointerdown', siapkan, { once: true, passive: true });
+    root.addEventListener('scroll', siapkan, { once: true, passive: true });
+    setTimeout(siapkan, 2500);
+  });
 }
+/* Panah slider (tampil di layar lebar lewat CSS) */
+/* Navigasi laptop di header + tombol mode gelap */
 (function () {
-  const root = $('#promoList'); if (!root) return;
-  const geser = arah => root.scrollBy({ left: arah * root.clientWidth * 0.9, behavior: 'smooth' });
-  const p = $('.promo-prev'), n = $('.promo-next');
+  const nav = $('.hdr-nav');
+  if (nav) nav.addEventListener('click', e => {
+    const go = e.target.closest('[data-goto]');
+    if (go) { e.preventDefault(); gulirKe(go.dataset.goto); }
+  });
+  const t = $('#btnTemaHdr');
+  if (t) t.addEventListener('click', () => setTema(saklar.getAttribute('aria-checked') !== 'true'));
+})();
+$$('.promo-wrap').forEach(w => {
+  const list = $('.promo-list', w); if (!list) return;
+  const geser = arah => list.scrollBy({ left: arah * list.clientWidth, behavior: kurangGerak() ? 'auto' : 'smooth' });
+  const p = $('.promo-prev', w), n = $('.promo-next', w);
   if (p) p.addEventListener('click', () => geser(-1));
   if (n) n.addEventListener('click', () => geser(1));
-})();
+});
 
 /* ---------- 6. Halaman Toko (#toko) ---------- */
 const storePage = $('#storePage'), storeSelect = $('#storeKategori'), storeCari = $('#storeCari');
@@ -466,6 +469,14 @@ $('#btnCheckout').addEventListener('click', e => { if (!isiKeranjang().length) e
 /* ---------- 8. Detail produk ---------- */
 const detail = $('#detail');
 let detailId = null;
+/* Angka besar ala halaman spesifikasi MacBook: "16 GB DDR4" -> angka "16", satuan "GB DDR4". Teks tanpa angka di depan dilewati. */
+function spekBesar(sp) {
+  const butir = [['RAM', sp.ram], ['Storage', sp.storage], ['Layar', sp.layar]].map(([label, v]) => {
+    const m = String(v || '').trim().match(/^(\d+(?:[.,]\d+)?)\s*(.*)$/);
+    return m ? `<div class="stat"><p class="stat-label">${esc(label)}</p><p class="stat-angka">${esc(m[1])}${m[2] ? `<span>${esc(m[2])}</span>` : ''}</p></div>` : '';
+  }).join('');
+  return butir ? `<div class="spek-besar">${butir}</div>` : '';
+}
 function bukaDetail(id) {
   const p = cariProduk(id); if (!p) return;
   detailId = p.id;
@@ -480,7 +491,9 @@ function bukaDetail(id) {
       <h3 class="detail-nama" style="margin-top:10px">${esc(nama)}</h3>
       <p class="detail-harga">${rupiah(p.harga)}${hemat ? `<s>${rupiah(p.hargaNormal)}</s>` : ''}</p>
       ${hemat ? `<p class="hemat">Hemat ${rupiah(p.hargaNormal - p.harga)}</p>` : ''}
+      <p class="detail-slogan">Dicek menyeluruh. Bergaransi toko. Harga jujur.</p>
       <h3>Spesifikasi</h3>
+      ${spekBesar(sp)}
       <dl>${baris('Merek', p.merek)}${baris('Seri', p.seri)}${baris('Processor', sp.processor)}${baris('RAM', sp.ram)}${baris('Storage', sp.storage)}${baris('Kartu grafis (VGA)', sp.vga)}${baris('Ukuran layar', sp.layar)}</dl>
       <h3>Kondisi unit</h3><p class="p">${esc(k.detail)}</p>
       <h3>Kelengkapan</h3><p class="p">${esc(k.kelengkapan)}</p>
@@ -661,7 +674,8 @@ async function muatSemua() {
   hasil.forEach(h => { if (h.status === 'rejected') console.error('Gagal memuat dari Supabase:', h.reason); });
   gagalMemuat = hasil[0].status === 'rejected';
   sedangMemuat = false; terakhirMuat = Date.now();
-  renderKatalog(); terapkanConfig(); renderHero(); renderSliderToko(); renderPromo(); bersihkanKeranjang();
+  renderKatalog(); terapkanConfig(); renderHero(); renderSliderToko(); renderPromo(); isiStatistik(); bersihkanKeranjang();
+  tutupSplash();
 }
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && Date.now() - terakhirMuat > 20000) muatSemua();
@@ -673,11 +687,31 @@ try {
     .subscribe();
 } catch (e) { console.warn('Realtime tidak aktif:', e); }
 
+/* ---------- 10b. Angka statistik di seksi (diisi dari data nyata) ---------- */
+function isiStatistik() {
+  const set = (k, v) => $$(`[data-stat="${k}"]`).forEach(el => { el.textContent = v; });
+  set('merek', $$('.merek-item').length || 11);
+  set('kategori', KATEGORI.length);
+  set('produk', PRODUK.length);
+  $$('[data-stat="produk"]').forEach(el => { const st = el.closest('.stat'); if (st) st.hidden = !PRODUK.length; });
+}
+
+/* ---------- 10c. Layar muat: hilang setelah data pertama masuk (maks. 3 detik) ---------- */
+const splash = $('#splash'), splashMulai = Date.now();
+let splashTutup = false;
+function tutupSplash() {
+  if (splashTutup || !splash) return; splashTutup = true;
+  const tunda = Math.max(0, 700 - (Date.now() - splashMulai));      /* tampil minimal 0,7 detik agar tidak berkedip */
+  setTimeout(() => { splash.classList.add('selesai'); setTimeout(() => splash.remove(), 600); }, tunda);
+}
+setTimeout(tutupSplash, 3000);
+
 /* ---------- 11. Mulai ---------- */
 terapkanConfig();
 renderHero();
 renderSliderToko();
 renderPromo();
+isiStatistik();
 renderKeranjang();
 muatSemua();
 sinkronToko();

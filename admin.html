@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Panel Admin | Laptop Makassar</title>
-  <link rel="icon" href="images/logo.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,9 +17,9 @@
 <!-- ===== LOGIN ===== -->
 <section id="viewLogin" class="login" hidden>
   <form id="formLogin" class="login-kartu" autocomplete="on">
-    <img src="images/logo.png" alt="" width="48" height="48">
+    <img class="login-logo" src="images/logo-teknoa.png" alt="TEKNOA.ID" width="816" height="95">
     <h1>Panel Admin</h1>
-    <p class="muted">Laptop Makassar</p>
+    <p class="muted">TEKNOA.ID &middot; Laptop Makassar</p>
     <label for="email">Email</label>
     <input id="email" type="email" autocomplete="username" required>
     <label for="sandi">Kata sandi</label>
@@ -45,18 +46,20 @@
       <button role="tab" id="tab-toko"         aria-selected="false" aria-controls="pnl-toko"         data-tab="toko" tabindex="-1">Foto Toko</button>
       <button role="tab" id="tab-promo"        aria-selected="false" aria-controls="pnl-promo"        data-tab="promo" tabindex="-1">Promo 1</button>
       <button role="tab" id="tab-promo2"       aria-selected="false" aria-controls="pnl-promo2"       data-tab="promo2" tabindex="-1">Promo 2</button>
+      <button role="tab" id="tab-promo3"       aria-selected="false" aria-controls="pnl-promo3"       data-tab="promo3" tabindex="-1">Promo 3</button>
       <button role="tab" id="tab-info"         aria-selected="false" aria-controls="pnl-info"         data-tab="info" tabindex="-1">Info &amp; Kontak</button>
       <button role="tab" id="tab-produk"       aria-selected="false" aria-controls="pnl-produk"       data-tab="produk" tabindex="-1">Produk</button>
     </nav>
   </header>
 
   <main class="isi">
-    <!-- Lima tab media memakai komponen yang sama (diisi oleh admin.js) -->
+    <!-- Enam tab media memakai komponen yang sama (diisi oleh admin.js) -->
     <section id="pnl-hero_desktop" role="tabpanel" aria-labelledby="tab-hero_desktop" data-media="hero_desktop"></section>
     <section id="pnl-hero_hp"      role="tabpanel" aria-labelledby="tab-hero_hp"      data-media="hero_hp" hidden></section>
     <section id="pnl-toko"         role="tabpanel" aria-labelledby="tab-toko"         data-media="toko" hidden></section>
     <section id="pnl-promo"        role="tabpanel" aria-labelledby="tab-promo"        data-media="promo" hidden></section>
     <section id="pnl-promo2"       role="tabpanel" aria-labelledby="tab-promo2"       data-media="promo2" hidden></section>
+    <section id="pnl-promo3"       role="tabpanel" aria-labelledby="tab-promo3"       data-media="promo3" hidden></section>
 
     <!-- Info & Kontak -->
     <section id="pnl-info" role="tabpanel" aria-labelledby="tab-info" hidden>

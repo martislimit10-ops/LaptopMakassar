@@ -1,7 +1,7 @@
 /* =====================================================================
    LAPTOP MAKASSAR - PANEL ADMIN
    Butuh: supabase-js -> supabase-config.js -> admin.js
-   Tab: Hero Desktop, Hero HP, Foto Toko, Promo 1, Promo 2, Info & Kontak, Produk.
+   Tab: Hero Desktop, Hero HP, Foto Toko, Promo 1, Promo 2, Promo 3, Info & Kontak, Produk.
    Sekali klik "Simpan" -> data masuk Supabase -> halaman depan
    terbarui otomatis (realtime), tanpa mengubah file di GitHub.
    ===================================================================== */
@@ -15,7 +15,12 @@ function toast(teks) {
   const t = $('#toast'); t.textContent = teks; t.classList.add('tampil');
   clearTimeout(timerToast); timerToast = setTimeout(() => t.classList.remove('tampil'), 2600);
 }
-const pesanGalat = e => (e && (e.message || e.error_description)) || 'Terjadi kesalahan';
+const pesanGalat = e => {
+  const m = (e && (e.message || e.error_description)) || 'Terjadi kesalahan';
+  /* 23514 = pelanggaran CHECK di database: nilai "bagian" ini belum diizinkan oleh tabel banner */
+  if (e && (e.code === '23514' || /check constraint/i.test(m))) return m + ' (database belum mengizinkan nilai "bagian" ini; hubungi pengelola Supabase)';
+  return m;
+};
 function setPesan(el, teks, galat = false) {
   el.textContent = teks || ''; el.classList.toggle('galat', !!galat); if (el.hasAttribute('hidden') || el.id.startsWith('pesanProduk')) el.hidden = !teks;
 }
@@ -89,7 +94,7 @@ tabs.forEach((t, i) => {
 });
 
 /* =====================================================================
-   MANAJER MEDIA (dipakai 5 tab: hero_desktop, hero_hp, toko, promo, promo2)
+   MANAJER MEDIA (dipakai 6 tab: hero_desktop, hero_hp, toko, promo, promo2, promo3)
    Perubahan ditampung dulu, baru dikirim saat klik "Simpan".
    ===================================================================== */
 const KONFIG_MEDIA = {
@@ -102,7 +107,9 @@ const KONFIG_MEDIA = {
   promo: { judul: 'Slide Promo 1 (Promo Saat Ini)', maks: 10, video: false, rasio: '',
     info: 'Khusus foto atau infografis, maksimal 10. Tampil sebagai slide geser dan utuh tidak dipotong. Disarankan POTRET 4:5 (contoh 1080x1350).' },
   promo2: { judul: 'Slide Promo 2 (di bawah Promo 1)', maks: 10, video: false, rasio: '',
-    info: 'Khusus foto atau infografis, maksimal 10. Tampil sebagai slide geser kedua tepat di bawah Promo 1. Disarankan POTRET 4:5 (contoh 1080x1350).' }
+    info: 'Khusus foto atau infografis, maksimal 10. Tampil sebagai slide geser kedua tepat di bawah Promo 1. Disarankan POTRET 4:5 (contoh 1080x1350).' },
+  promo3: { judul: 'Slide Promo 3 (di bawah Promo 2)', maks: 10, video: false, rasio: '',
+    info: 'Khusus foto atau infografis, maksimal 10. Tampil sebagai slide geser ketiga tepat di bawah Promo 2. Seksi ini otomatis muncul di website begitu ada minimal 1 foto yang tersimpan dan berstatus Tampilkan. Disarankan POTRET 4:5 (contoh 1080x1350).' }
 };
 
 function buatManajerMedia(root, bagian) {
